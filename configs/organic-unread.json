@@ -1,0 +1,22 @@
+{
+  "seed": "blobatar-organic-study",
+  "options": {
+    "traits": {
+      "shape": 0.35,
+      "eye.ratio": 0.85,
+      "eye.n": 0.45
+    },
+    "palette": {
+      "head": "#C277DF",
+      "eye": "#071014"
+    },
+    "background": false
+  },
+  "render": {
+    "transparent": true,
+    "resolution": 768,
+    "samples": 64
+  },
+  "status": "online",
+  "badge": 3
+}

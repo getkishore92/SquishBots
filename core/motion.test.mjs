@@ -1,0 +1,45 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as port from '../web/motion.js';
+import {idleAt, idleSeeds} from './vendor/blobatar/idle.ts';
+import {project,step,pursuit} from './vendor/blobatar/gaze.ts';
+import {lerpPose,IDENT} from './vendor/blobatar/morph.ts';
+import * as expressions from './vendor/blobatar/expression.ts';
+import {_marks} from './vendor/blobatar/blobatar.ts';
+import {resolveConfig,EXPRESSION_NAMES} from './resolve.mjs';
+
+test('browser idle frames match upstream across seeds, blink boundaries and amplitudes',()=>{
+ for(const name of ['alain00',' 😀 Café ','reaction']){
+  const seeds=idleSeeds(name);
+  for(const t of [0,123,2800,6500,123456,seeds.blink*.986-seeds.blinkPhase]){
+   for(const amp of [0,.3,1])assert.deepEqual(port.idleAt(seeds,t,amp,.6),idleAt(seeds,t,amp,.6));
+  }
+ }
+ const seeds={phase:0,bob:0,blink:5000,blinkPhase:0,saccade:6000,saccadePhase:0,lookX:1.4,lookY:1.1,lookMX:1.4,lookMY:1.1};
+ assert.ok(Math.abs(port.idleAt(seeds,4930,1).blink-.08)<1e-10);
+ assert.equal(port.idleAt(seeds,4800,1).blink,1);
+});
+
+test('browser gaze matches canonical projection and pursuit near the limb',()=>{
+ for(const mark of [{x:0,y:0},{x:-.3,y:-.1},{x:.4,y:.2},{x:1.1,y:.4}]){
+  for(const yaw of [-1.5,-.4,0,.4,1.5])for(const pitch of [-1,0,1])assert.deepEqual(port.project(mark,yaw,pitch),project(mark,yaw,pitch));
+ }
+ for(const dx of [-300,0,10,300]){
+  const input={x:.1,y:.1,dx,dy:20,radius:100,k:pursuit(16),gain:.8};
+  assert.deepEqual(port.step(input),step(input));
+ }
+ assert.equal(port.pursuit(16),pursuit(16));
+});
+
+test('motion contract uses unposed eyes and leaves static marks unchanged',()=>{
+ for(const expression of EXPRESSION_NAMES){
+  const config={seed:'expression-test',options:{expression,traits:{shape:.99}}};
+  const resolved=resolveConfig(config);
+  assert.deepEqual(resolved.motion.pose,expressions[expression].p);
+  assert.deepEqual(resolved.motion.reactionPoses,{press:expressions.happy.p,drag:expressions.surprised.p,edge:expressions.scared.p});
+  assert.deepEqual(resolved.motion.seeds,idleSeeds(config.seed,config.options));
+  assert.deepEqual(resolved.marks,_marks(config.seed,{...config.options,expression:expressions[expression]}).marks);
+  assert.deepEqual(resolved.motion.baseMarks,_marks(config.seed,{...config.options,expression:expressions.idle}).marks);
+  assert.deepEqual(port.lerpPose(IDENT,expressions[expression].p,.4),lerpPose(IDENT,expressions[expression].p,.4));
+ }
+});

@@ -1,0 +1,15 @@
+node_modules/
+web-dist/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+renders/
+configs/resolved/
+*.blend
+*.blend1
+frontend/src/assets/fonts/*.woff2
+# Historical local review artifacts
+review.html
+review-sheet.png

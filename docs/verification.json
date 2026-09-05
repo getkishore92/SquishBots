@@ -1,0 +1,58 @@
+{
+  "updated": "2026-09-06",
+  "scope": "Local development evidence. Generated captures are excluded from the public source repository. This file is not a CI result for every future checkout.",
+  "supportedMaterials": [
+    "resin",
+    "clay",
+    "fur",
+    "glass"
+  ],
+  "checks": {
+    "core": {
+      "command": "npm test",
+      "passed": 21,
+      "scope": "Final four-material, eleven-shape configuration; geometry, motion math, validation and shuffle controls"
+    },
+    "frontend": {
+      "command": "npm run typecheck",
+      "result": "passed after final eleven-shape changes"
+    },
+    "fontSetup": {
+      "command": "npm run setup:fonts",
+      "result": "Official Fontshare archive downloaded; both variable WOFF2 files and original license extracted"
+    }
+  },
+  "historicalLocalEvidence": {
+    "note": "Captured in the local development workspace before the final React and shape changes. Re-run current browser and API checks before relying on these results. Referenced artifacts are not distributed.",
+    "transparentPng": {
+      "browserExport": "renders/jobs/f404e1c2-dc8e-4635-b2b3-40eabbd917a0/avatar.png",
+      "mode": "RGBA",
+      "dimensions": [
+        768,
+        768
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "transparentPixels": 463301,
+      "opaquePixels": 103191
+    },
+    "apiTestsPassed": 4,
+    "gif": "renders/animations/e031b546-412e-4b50-840f-5d0614230319/avatar.gif",
+    "mp4": {
+      "path": "renders/animations/20c66576-4259-4a79-89e8-8c80e1fe7984/avatar.mp4",
+      "codec": "h264",
+      "width": 768,
+      "height": 768,
+      "duration": 4
+    }
+  },
+  "limitations": [
+    "Browser preview and Blender Cycles use different rendering engines and fibers.",
+    "Local server with an in-memory queue; no public multi-user hosting.",
+    "Exact cross-device or cross-version pixel identity is not guaranteed."
+  ],
+  "supportedShapeCount": 11,
+  "exposedTraitCount": 44
+}

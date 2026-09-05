@@ -1,0 +1,21 @@
+{
+  "seed": "blobatar-round-study",
+  "options": {
+    "traits": {
+      "shape": 0.11,
+      "eye.ratio": 0.85,
+      "eye.n": 0.45
+    },
+    "palette": {
+      "head": "#06C5D8",
+      "eye": "#071014"
+    },
+    "background": false
+  },
+  "render": {
+    "transparent": true,
+    "resolution": 768,
+    "samples": 64
+  },
+  "status": "online"
+}

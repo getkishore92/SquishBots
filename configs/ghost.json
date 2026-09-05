@@ -1,0 +1,23 @@
+{
+  "seed": "new-shapes-0",
+  "options": {
+    "traits": {
+      "shape": 0.96
+    },
+    "palette": {
+      "head": "#C8E5EF",
+      "eye": "#131524"
+    },
+    "background": false
+  },
+  "render": {
+    "resolution": 384,
+    "samples": 16
+  },
+  "material": {
+    "preset": "resin",
+    "roughness": 0.22,
+    "textureScale": 24,
+    "textureStrength": 0
+  }
+}
