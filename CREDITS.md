@@ -12,3 +12,5 @@ SquishBots translates Blobatar's avatar system into configurable 3D objects, wit
 - **[FFmpeg](https://ffmpeg.org/)** converts preview recordings to GIF and MP4. It is installed separately; its license depends on the selected build.
 
 Original SquishBots code is copyright © 2026 Kishore Sundarajan under the [MIT license](LICENSE). Third-party source and assets retain their original ownership and licenses. The upstream authors do not endorse this project.
+
+Hosted GIF export uses [gifenc](https://github.com/mattdesl/gifenc), under the MIT license.

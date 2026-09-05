@@ -83,3 +83,11 @@ The server is designed for local use. Its job queue lives in memory, and generat
 SquishBots code is available under the [MIT license](LICENSE), copyright © 2026 Kishore Sundarajan. Third-party contributions retain their licenses. Blobatar's vendored source remains copyright © 2026 Alain. Satoshi uses Indian Type Foundry's separate font license.
 
 Read [CREDITS.md](CREDITS.md) for source versions, attribution and retained notices. The upstream authors do not endorse this project.
+
+## Deploy on Vercel
+
+Import this repository with the Vite preset and repository root `./`. `vercel.json` sets the build command and `web-dist` output directory automatically. No environment variables are required.
+
+The hosted build ships the Three.js assets and uses stateless Node functions for the catalog and configuration resolver. PNGs come from the browser's 3D renderer, including transparent export at the selected resolution. GIFs are encoded in the browser. WebM and MP4 use MediaRecorder; MP4 appears only in browsers that support it. Blender PNG rendering and server-side FFmpeg conversion remain available in local mode.
+
+To reproduce the hosted build locally, run `npm run setup:fonts` followed by `node tools/build-hosted.mjs`. The API functions are in `api/`; the normal local server can also serve this build for browser verification.

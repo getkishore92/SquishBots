@@ -81,7 +81,7 @@ export function createPreview(container){
    scene.remove(avatar);disposeGroup(avatar);avatar=next;scene.add(avatar);if(raf){cancelAnimationFrame(raf);raf=0}animate();return {shape:resolved.shape,material:resolved.material?.preset??'resin'};
   },
   setEyesVisible(visible){if(reaction)for(const eye of reaction.eyes)eye.mesh.visible=!!visible},
-  capture(){if(disposed)return null;resize();freezeForCapture=true;if(raf){cancelAnimationFrame(raf);raf=0}morphStart=performance.now()-morphTiming.ms;animate();const url=renderer.domElement.toDataURL('image/png');freezeForCapture=false;return url},
+  capture({size,background}={}){if(disposed)return null;resize();freezeForCapture=true;if(raf){cancelAnimationFrame(raf);raf=0}morphStart=performance.now()-morphTiming.ms;animate();if(size){renderer.setPixelRatio(1);renderer.setSize(size,size,false);camera.left=-1.65;camera.right=1.65;camera.top=1.65;camera.bottom=-1.65;camera.updateProjectionMatrix()}if(background)renderer.setClearColor(background,1);renderer.render(scene,camera);const url=renderer.domElement.toDataURL('image/png');renderer.setClearColor(0x000000,0);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));resize();freezeForCapture=false;return url},
   setTheme(value){if(disposed)return;theme=value;renderer.toneMappingExposure=theme==='dark'?1.15:1.08;renderer.render(scene,camera)},
   setMotion(value){motion=['none','hover','always'].includes(value)?value:'none';schedule()},
   setInteractionMode(value='rotate'){interactionMode=value==='play'?'play':'rotate';drag.active=false;drag.x=drag.y=drag.vx=drag.vy=0;impactAt=releaseAt=-1e9;gestureMix=0;if(interactionMode==='play'){viewYaw=viewPitch=0;viewQuaternion.identity();avatar.quaternion.identity()}schedule()},
