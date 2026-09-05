@@ -1,3 +1,4 @@
+import './build-api.mjs';
 import {cp,mkdir} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 const build=spawnSync('npm',['run','build'],{stdio:'inherit',env:{...process.env,VITE_HOSTED:'true'}});if(build.status!==0)process.exit(build.status??1);
