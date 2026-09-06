@@ -123,7 +123,7 @@ def eye_fur_mesh(eye,mat,opts,index):
 def fur_mesh(body,eyes,cx,cy,mat,opts):
     rng=random.Random(0);me=body.data;me.calc_loop_triangles();triangles=list(me.loop_triangles);areas=[];total=0
     for tri in triangles:total+=tri.area;areas.append(total)
-    count=int(opts.get('furDensity',12000));length=opts.get('furLength',.075)
+    count=int(opts.get('furDensity',28000));length=opts.get('furLength',.22)
     curve=bpy.data.curves.new('Deterministic fine fur','CURVE');curve.dimensions='3D';curve.resolution_u=1;curve.bevel_depth=.0022;curve.bevel_resolution=0;curve.resolution_u=1
     boxes=[]
     for eye in eyes:
@@ -132,8 +132,9 @@ def fur_mesh(body,eyes,cx,cy,mat,opts):
         tri=triangles[bisect.bisect_left(areas,rng.random()*total)];vs=[me.vertices[k] for k in tri.vertices];a=math.sqrt(rng.random());b=rng.random();weights=(1-a,a*(1-b),a*b)
         p=sum((v.co*w for v,w in zip(vs,weights)),Vector());n=sum((v.normal*w for v,w in zip(vs,weights)),Vector()).normalized()
         if p.y<0 and any(x0<p.x<x1 and z0<p.z<z1 for x0,x1,z0,z1 in boxes):continue
-        tangent=n.cross(Vector((rng.random(),rng.random(),rng.random()))).normalized();h=length*rng.uniform(.65,1.2);bend=rng.uniform(-.4,.4)*h
-        points=[p+n*h*(j/3)+tangent*bend*(j/3)**2 for j in range(4)]
+        flow=Vector((.35*math.sin(p.z*9+p.x*7),-.15*math.sin(p.x*8),-1));flow=(flow-n*flow.dot(n)).normalized()
+        side=n.cross(flow).normalized();h=length*rng.uniform(.7,1.35);curl=rng.uniform(-.11,.11)
+        points=[p+n*h*(t-.38*t*t)+flow*h*.95*t*t+side*h*curl*math.sin(t*math.pi) for t in (j/6 for j in range(7))]
         if strand_hits_eyes(points,boxes):continue
         spline=curve.splines.new('POLY');spline.points.add(len(points)-1)
         for j,q in enumerate(points):

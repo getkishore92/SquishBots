@@ -9,7 +9,7 @@ export const SOURCE = {version:'2.7.0', commit:'ebb7ea4808b1263629fc8fa65e2398b9
 export const MATERIAL_DEFAULTS = {
  resin:{preset:'resin',roughness:.22,textureScale:24,textureStrength:0},
  clay:{preset:'clay',roughness:.78,textureScale:35,textureStrength:.045},
- fur:{preset:'fur',roughness:.75,textureScale:30,textureStrength:.1,furLength:.075,furDensity:12000},
+ fur:{preset:'fur',roughness:.75,textureScale:30,textureStrength:.1,furLength:.22,furDensity:28000},
  glass:{preset:'glass',roughness:.06,textureScale:24,textureStrength:0}
 };
 export const MATERIAL_PRESETS = Object.keys(MATERIAL_DEFAULTS);

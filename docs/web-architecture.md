@@ -59,3 +59,5 @@ The server binds to 127.0.0.1 and is intended for local use. A public multi-user
 ## Checks
 
 `npm test` checks source geometry, sparse traits, narrowing, expressions, motion math, hashing, material bounds and eye contrast. `npm run typecheck` and `npm run build` check the frontend. `npm run test:api` performs API checks and a real Blender render. Browser interaction and visual review remain separate from these code checks.
+
+Fur uses dense, tapered strand ribbons in the browser, with root-to-tip shading and downward combing. Blender uses tapered curves with the same longer, curved grooming direction. New sessions start in Play mode. Press R outside text fields and popups to shuffle all unlocked settings.
