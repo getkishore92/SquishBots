@@ -62,4 +62,4 @@ Fur uses dense, tapered strand ribbons in the browser, with root-to-tip shading 
 
 Claude uses bevelled component meshes with twice the original extrusion depth. Codex uses a smooth union of rounded volumes for its cloud head, torso and limbs, with a curved dark screen and terminal-shaped eyes. The Blender render command uses the same generated Codex mesh. Fur uses raised round black eyes; the coat is continuous behind them and eye squashing preserves blinks and expressions. `web/fur-eyes.js` is bundled into hosted deployments alongside the preview module.
 
-Play-mode dragging compresses along the drag direction and expands across it, including diagonal pushes. Releasing springs back to rest. Reduced motion suppresses deformation.
+Play-mode wall impacts compress along the wall normal and expand across it, then recover. Clicking and dragging in open space do not squash the body. Reduced motion suppresses deformation.
