@@ -14,15 +14,13 @@ SquishBots has one configuration resolver, a React configurator, a Three.js prev
     "expression": "idle"
   },
   "material": {"preset": "resin", "roughness": 0.22},
-  "status": "none",
-  "badge": 0,
   "render": {"transparent": true, "resolution": 768, "samples": 64}
 }
 ```
 
-`seed` maps to Blobatar's name. `options` retains source trait, palette, hue, tone, normalization, contrast and expression settings. JSON stores expressions by name; the resolver maps each name to the source expression object. `status` and `badge` control presence decorations. Renderer-specific settings live under `material` and `render`.
+`seed` maps to Blobatar's name. `options` retains source trait, palette, hue, tone, normalization, contrast and expression settings. JSON stores expressions by name; the resolver maps each name to the source expression object. Legacy status and badge fields are discarded. Renderer-specific settings live under `material` and `render`.
 
-A missing trait uses the seed, a number pins its normalized value, and an array narrows it to seed-selected alternatives. An empty array behaves as missing. The catalog exposes trait keys through curated and advanced controls. Shape and tone pools preserve ordered alternatives. Slider edits use three decimal places.
+A missing trait uses the seed, a number pins its normalized value, and an array narrows it to seed-selected alternatives. An empty array behaves as missing. The catalog exposes trait keys through curated and advanced controls. The editor selects one shape at a time; legacy shape pools restore their first choice. Tone pools preserve ordered alternatives. Slider edits use three decimal places.
 
 Shuffle chooses another name and preserves pinned traits. Unlocked material, color, expression and presence settings also change; their locks preserve them. Explicit eye colors remain manual. Without an eye override, custom body colors receive a contrasting light or dark eye color. Material presets are resin, clay, fur and glass; their current defaults come from the resolver catalog rather than a separate geometry vocabulary.
 
@@ -44,7 +42,7 @@ Configuration hashes identify resolved input, including material settings and th
 
 The frontend debounces configuration requests and discards stale responses. Picker thumbnails are bundled static PNGs: neutral spheres for materials, neutral faces for expressions, and fixed silhouettes for shapes. Avatar edits update selection highlights without regenerating these images.
 
-Session storage retains configuration, locks, pools, interaction mode, motion and gaze. Local storage retains the theme. Mobile uses a large preview, four customization tabs, collapsed fine-tuning and an export bottom sheet; desktop shows a scrollable inspector alongside the stage. The header links to GitHub for starring the project. Legacy backdrop settings are normalized to false. Cloud uses a continuous eight-lobe outline. Happy uses open eyes with separate raised brow marks in both renderers. The browser schedules occasional blinks independently of hover motion, with reduced-motion and static-capture suppression. JSON panels, an iframe widget and a crowd view are not part of the current editor.
+Session storage retains configuration, locks, tone pools, interaction mode, motion and gaze. Local storage retains the theme. Mobile uses a large preview, four customization tabs, collapsed fine-tuning and an export bottom sheet; desktop shows a scrollable inspector alongside the stage. The header links to GitHub for starring the project. Legacy backdrop settings are normalized to false. Cloud uses a continuous eight-lobe outline. Happy uses open eyes with separate raised brow marks in both renderers. The browser schedules occasional blinks independently of hover motion, with reduced-motion and static-capture suppression. JSON panels, an iframe widget and a crowd view are not part of the current editor.
 
 ## Local server and export
 
@@ -62,4 +60,6 @@ The server binds to 127.0.0.1 and is intended for local use. A public multi-user
 
 Fur uses dense, tapered strand ribbons in the browser, with root-to-tip shading and downward combing. Blender uses tapered curves with the same longer, curved grooming direction. New sessions start in Play mode. Press R outside text fields and popups to shuffle all unlocked settings.
 
-Claude and Codex use shallow bevelled component meshes, preserving separate arms and feet. Codex has a raised dark screen with terminal-shaped eyes. Fur uses raised round black eyes; the coat is continuous behind them and eye squashing preserves blinks and expressions. `web/fur-eyes.js` is bundled into hosted deployments alongside the preview module.
+Claude uses bevelled component meshes with twice the original extrusion depth. Codex uses a smooth union of rounded volumes for its cloud head, torso and limbs, with a curved dark screen and terminal-shaped eyes. The Blender render command uses the same generated Codex mesh. Fur uses raised round black eyes; the coat is continuous behind them and eye squashing preserves blinks and expressions. `web/fur-eyes.js` is bundled into hosted deployments alongside the preview module.
+
+Play-mode dragging compresses along the drag direction and expands across it, including diagonal pushes. Releasing springs back to rest. Reduced motion suppresses deformation.

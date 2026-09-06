@@ -34,8 +34,7 @@ export function validateConfig(input) {
  if(o.background!==undefined)o.background=false;
  if(o.palette!==undefined){assert(object(o.palette),'palette must be an object');for(const [k,v] of Object.entries(o.palette))assert(['head','eye','bg'].includes(k)&&typeof v==='string'&&/^#[\da-f]{6}$/i.test(v),'Palette colors must be six-digit hex for Blender')}
  if(o.expression!==undefined)assert(EXPRESSION_NAMES.includes(o.expression),'Unknown expression');
- if(c.status!==undefined)assert(['online','away','offline','thinking','none'].includes(c.status),'Unknown status');
- if(c.badge!==undefined)assert(Number.isInteger(c.badge)&&c.badge>=0,'badge must be a nonnegative integer');
+ delete c.status;delete c.badge;
  const m=c.material??={preset:'resin'};assert(object(m),'material must be an object');
  assert(MATERIAL_PRESETS.includes(m.preset),'Unknown material preset');
  const bounds={roughness:[0,1],textureScale:[.1,100],textureStrength:[0,1],furLength:[.001,.3],furDensity:[100,50000]};
@@ -86,7 +85,7 @@ function renderOptions(config) {
  if(!options.palette?.eye&&_layout(config.seed,{...options,expression:expressions.idle}).shape==='codex')palette={...palette,eye:'#a7f4ff'};
  return {...options,...(palette?{palette}:{}),expression:options.expression==='happy'?happyExpression:expressions[options.expression??'idle']};
 }
-function screenPath(b){const x=b.cx-b.rx*.77,y=b.cy-b.ry*.57,w=b.rx*1.54,h=b.ry*.84,r=b.rx*.14;return `M ${x+r} ${y} L ${x+w-r} ${y} Q ${x+w} ${y} ${x+w} ${y+r} L ${x+w} ${y+h-r} Q ${x+w} ${y+h} ${x+w-r} ${y+h} L ${x+r} ${y+h} Q ${x} ${y+h} ${x} ${y+h-r} L ${x} ${y+r} Q ${x} ${y} ${x+r} ${y} Z`}
+function screenPath(b){const x=b.cx-b.rx*.62,y=b.cy-b.ry*.48,w=b.rx*1.24,h=b.ry*.78,r=b.rx*.16;return `M ${x+r} ${y} L ${x+w-r} ${y} Q ${x+w} ${y} ${x+w} ${y+r} L ${x+w} ${y+h-r} Q ${x+w} ${y+h} ${x+w-r} ${y+h} L ${x+r} ${y+h} Q ${x} ${y+h} ${x} ${y+h-r} L ${x} ${y+r} Q ${x} ${y} ${x+r} ${y} Z`}
 export function resolveConfig(input) {
  const config=validateConfig(input), opts=renderOptions(config);
  const layout=_layout(config.seed,opts), {marks,transform,bg}=_marks(config.seed,opts);
@@ -102,7 +101,7 @@ export function resolveConfig(input) {
   bodyPaths:body.filter(m=>m.kind==='path').map(m=>m.d),
   bodyCircles:body.filter(m=>m.kind==='circle'), eyes,
   colors:{head:layout.palette.head,eye:layout.palette.eye,bg:layout.palette.bg},
-  status:config.status??'none',badge:config.badge??0,material:config.material,render:{...config.render,depth:config.render.depth??(['claude','codex'].includes(layout.shape)?.20:.95*Math.min(layout.body.rx,layout.body.ry)/32)}};
+  material:config.material,render:{...config.render,depth:config.render.depth??(layout.shape==='claude'?.40:.95*Math.min(layout.body.rx,layout.body.ry)/32)}};
 }
 export function referenceSvg(config){const c=validateConfig(config);return blobatar(c.seed,renderOptions(c))}
 if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href){

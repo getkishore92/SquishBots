@@ -8,8 +8,8 @@ Blobatar supplies seeded shapes, traits, palettes, expressions and motion mathem
 
 - Thirteen shape families, including Claude and Codex, with fourteen expressions and fine-tuning controls.
 - Resin, clay, fur and glass finishes, applied to the body, eyes and presence decorations.
-- Name-based generation, pinned traits, shape and tone pools, and locks for shuffling.
-- Body and eye colors, automatic eye contrast, background shapes, status dots and unread badges.
+- Name-based generation, pinned traits, shape selection and tone pools, and locks for shuffling.
+- Body and eye colors, automatic eye contrast, a transparent background.
 - Pointer-following eyes, blinking, expression reactions, full rotation and a separate drag-to-play mode.
 - Responsive React editor with shadcn/ui, Tailwind CSS, Phosphor icons and Satoshi typography. Neutral light and dark themes; dark is the default.
 - Transparent or opaque PNG exports through Blender Cycles.

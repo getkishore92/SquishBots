@@ -4,6 +4,7 @@ import {spawn} from 'node:child_process';
 import {dirname,resolve,delimiter,extname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {resolveConfig,referenceSvg} from '../core/resolve.mjs';
+import {resolveGeometry,bodyMeshData,surfaceMarkMesh,surfaceDepth} from '../web/geometry.js';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 function executable(path){try{accessSync(path,constants.X_OK);return path}catch{return null}}
 function blenderBinary(){
@@ -20,6 +21,7 @@ async function main(){
  const [input,output]=positional.map(p=>resolve(p));
  if(extname(output).toLowerCase()!=='.png')throw new Error('Output must have a .png extension');
  const config=JSON.parse(readFileSync(input,'utf8')),scene=resolveConfig(config),binary=blenderBinary();
+ if(scene.shape==='codex'){const g=resolveGeometry(scene);scene.plushGeometry=bodyMeshData(g);scene.plushFace=[scene.facePlate,...scene.eyes,...scene.brows].map((mark,i)=>({...surfaceMarkMesh(mark,g,i? .052:.025),fill:mark.fill}));scene.plushEyeDepths=scene.motion.baseLayout.eyes.map(e=>surfaceDepth((e.cx-g.cx)/32,(g.cy-e.cy)/32,g))}
  mkdirSync(dirname(output),{recursive:true});
  const base=output.slice(0,-4),resolved=`${base}.resolved.json`,reference=`${base}.reference.svg`;
  writeFileSync(resolved,JSON.stringify(scene,null,2)+'\n');writeFileSync(reference,referenceSvg(config));

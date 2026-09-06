@@ -1,3 +1,5 @@
+import {Shape,ShapeGeometry,Vector2} from 'three';
+import {MarchingCubes} from 'three/addons/objects/MarchingCubes.js';
 // Same source-path sampling and monotonic radial inflation as renderer/render.py.
 export const TAU = Math.PI * 2;
 export function pathPoints(d, steps = 20) {
@@ -21,16 +23,17 @@ function rayIntervals(poly,cx,cy,angle){const dx=Math.cos(angle),dz=Math.sin(ang
 export function resolveGeometry(scene,n=160){
  const polys=scene.marks.slice(0,-2).map(m=>m.kind==='circle'?Array.from({length:160},(_,i)=>[m.cx+m.r*Math.cos(TAU*i/160),m.cy+m.r*Math.sin(TAU*i/160)]):pathPoints(m.d));
  const {cx,cy}=scene.layout.body,depth=scene.render?.depth??(.95*Math.min(scene.layout.body.rx,scene.layout.body.ry)/32);
+ if(scene.shape==='codex')return {polys,cx,cy,depth,plush:true,rx:scene.layout.body.rx/32,ry:scene.layout.body.ry/32,rs:Array(n).fill(1),pole:1};
  function component(ps,x,y,d){const rs=[];for(let i=0;i<n;i++){const intervals=ps.flatMap(p=>rayIntervals(p,x,y,TAU*i/n)).sort((a,b)=>a[0]-b[0]);let reach=0;for(const [a,b]of intervals){if(a>reach+1e-5)return null;reach=Math.max(reach,b)}if(!reach)return null;rs.push(reach/32)}const mean=rs.reduce((a,b)=>a+b,0)/n;return {polys:ps,cx:x,cy:y,rs,pole:Math.min(mean,Math.min(...rs)*1.3),depth:d}}
  const flat=['claude','codex'].includes(scene.shape);
  const joined=component(polys,cx,cy,depth);if(joined)joined.flat=flat;if(joined)return joined;
  // Composite source marks may contain genuine gaps. Preserve each mark instead
  // of bridging empty SVG space with an invented radial envelope.
- const ordered=[polys.at(-1),...polys.slice(0,-1)];const parts=ordered.map((p,i)=>{const x=i?p.reduce((v,q)=>v+q[0],0)/p.length:cx,y=i?p.reduce((v,q)=>v+q[1],0)/p.length:cy;const radius=Math.min(Math.max(...p.map(q=>q[0]))-Math.min(...p.map(q=>q[0])),Math.max(...p.map(q=>q[1]))-Math.min(...p.map(q=>q[1])))/64;const g=component([p],x,y,i?Math.min(depth,radius*.95):depth);if(!g)throw new Error('Unsupported non-radial individual source mark');g.flat=flat;return g});return {...parts[0],polys,parts};
+ const ordered=[polys.at(-1),...polys.slice(0,-1)];const parts=ordered.map((p,i)=>{const x=i?p.reduce((v,q)=>v+q[0],0)/p.length:cx,y=i?p.reduce((v,q)=>v+q[1],0)/p.length:cy;const radius=Math.min(Math.max(...p.map(q=>q[0]))-Math.min(...p.map(q=>q[0])),Math.max(...p.map(q=>q[1]))-Math.min(...p.map(q=>q[1])))/64;const g=component([p],x,y,flat?depth:i?Math.min(depth,radius*.95):depth);if(!g)throw new Error('Unsupported non-radial individual source mark');g.flat=flat;return g});return {...parts[0],polys,parts};
 }
 
-export function surfaceDepth(x,y,g){if(g.flat)return g.depth;let k=(Math.atan2(y,x)+TAU)%TAU/TAU*g.rs.length,lo=Math.floor(k);const r=g.rs[lo]*(1-k+lo)+g.rs[(lo+1)%g.rs.length]*(k-lo),target=Math.hypot(x,y);let a=0,b=1;for(let i=0;i<20;i++){const mid=(a+b)/2;if(mid*(g.pole+(r-g.pole)*mid**3)<target)a=mid;else b=mid}const q=Math.min(.999,(a+b)/2);return g.depth*Math.sqrt(Math.max(.001,1-q*q));}
-export function bodyMeshData(g,m=48){if(g.parts){const vertices=[],indices=[];for(const part of g.parts){const data=bodyMeshData(part,m),offset=vertices.length/3;for(let i=0;i<data.vertices.length;i+=3)vertices.push(data.vertices[i]+(part.cx-g.cx)/32,data.vertices[i+1]+(g.cy-part.cy)/32,data.vertices[i+2]);indices.push(...data.indices.map(i=>i+offset))}return {vertices,indices}}const {rs,pole,depth}=g,n=rs.length,vertices=[0,0,depth],indices=[];
+export function surfaceDepth(x,y,g){if(g.plush){let a=0,b=.95;for(let i=0;i<18;i++){const z=(a+b)/2;if(plushField(x/g.rx,y/g.ry,z)<0)a=z;else b=z}return (a+b)/2*g.rx}if(g.flat)return g.depth;let k=(Math.atan2(y,x)+TAU)%TAU/TAU*g.rs.length,lo=Math.floor(k);const r=g.rs[lo]*(1-k+lo)+g.rs[(lo+1)%g.rs.length]*(k-lo),target=Math.hypot(x,y);let a=0,b=1;for(let i=0;i<20;i++){const mid=(a+b)/2;if(mid*(g.pole+(r-g.pole)*mid**3)<target)a=mid;else b=mid}const q=Math.min(.999,(a+b)/2);return g.depth*Math.sqrt(Math.max(.001,1-q*q));}
+export function bodyMeshData(g,m=48){if(g.plush)return plushMesh(g);if(g.parts){const vertices=[],indices=[];for(const part of g.parts){const data=bodyMeshData(part,m),offset=vertices.length/3;for(let i=0;i<data.vertices.length;i+=3)vertices.push(data.vertices[i]+(part.cx-g.cx)/32,data.vertices[i+1]+(g.cy-part.cy)/32,data.vertices[i+2]);indices.push(...data.indices.map(i=>i+offset))}return {vertices,indices}}const {rs,pole,depth}=g,n=rs.length,vertices=[0,0,depth],indices=[];
  if(g.flat){const bevel=Math.min(.05,depth*.4);for(const [inset,z] of [[bevel,depth],[0,depth-bevel],[0,-depth+bevel],[bevel,-depth]])for(let i=0;i<n;i++){const a=TAU*i/n,r=Math.max(.001,rs[i]-inset);vertices.push(r*Math.cos(a),r*Math.sin(a),z)}
  for(let i=0;i<n;i++)indices.push(0,1+i,1+(i+1)%n);for(let j=0;j<3;j++)for(let i=0;i<n;i++){const a=1+j*n+i,b=1+j*n+(i+1)%n;indices.push(a,a+n,b,b,a+n,b+n)}const cap=vertices.length/3;vertices.push(0,0,-depth);for(let i=0;i<n;i++)indices.push(cap,1+3*n+(i+1)%n,1+3*n+i);return {vertices,indices};}
 
@@ -56,4 +59,25 @@ export function deformEye(base, out, eye, index, g, pose, frame, gaze, face) {
   u=(cl*wx+sl*wy)*(pose.esx+sel*pose.esx2);v=(-sl*wx+cl*wy)*(pose.esy+sel*pose.esy2);x=(centerX+ct*u-st*v-g.cx)/32;y=(g.cy-centerY-st*u-ct*v)/32;
   out[i]=x;out[i+1]=y;out[i+2]=surfaceDepth(x,y,g)+relief;
  }
+}
+
+
+// Smoothly joined ellipsoids give Codex rounded volume from every angle.
+const plushParts=[
+ [0,.15,0,.79,.60,.62],
+ [-.61,.12,0,.37,.42,.42],[.61,.12,0,.37,.42,.42],
+ [-.48,.55,0,.37,.40,.43],[.43,.58,0,.37,.38,.43],
+ [-.13,.81,0,.37,.34,.42],
+ [0,-.70,0,.43,.40,.34],
+ [-.47,-.71,0,.16,.32,.17],[.47,-.71,0,.16,.32,.17],
+ [-.21,-1.10,.03,.17,.24,.22],[.21,-1.10,.03,.17,.24,.22]
+];
+function plushField(x,y,z){let d=10;for(const [cx,cy,cz,rx,ry,rz]of plushParts){const q=(Math.hypot((x-cx)/rx,(y-cy)/ry,(z-cz)/rz)-1)*Math.min(rx,ry,rz),h=Math.max(.10-Math.abs(d-q),0)/.10;d=Math.min(d,q)-h*h*.025}return d}
+function plushMesh(g){const n=56,span=1.55,mc=new MarchingCubes(n,undefined,false,false,40000);mc.isolation=0;for(let z=0;z<n;z++)for(let y=0;y<n;y++)for(let x=0;x<n;x++)mc.field[x+y*n+z*n*n]=-plushField((x/n*2-1)*span,(y/n*2-1)*span,(z/n*2-1)*span);mc.update();const count=mc.geometry.drawRange.count,vertices=Array.from(mc.geometry.attributes.position.array.slice(0,count*3)),normals=Array.from(mc.geometry.attributes.normal.array.slice(0,count*3));for(let i=0;i<vertices.length;i+=3){vertices[i]*=span*g.rx;vertices[i+1]*=span*g.ry;vertices[i+2]*=span*g.rx;normals[i]/=g.rx;normals[i+1]/=g.ry;normals[i+2]/=g.rx}mc.geometry.dispose();return {vertices,normals,indices:Array.from({length:count},(_,i)=>i)}}
+
+
+export function surfaceMarkMesh(mark,g,relief=.04){
+ const shape=new Shape(pathPoints(mark.d).map(([x,y])=>new Vector2((x-g.cx)/32,(g.cy-y)/32))),geo=new ShapeGeometry(shape).toNonIndexed(),vertices=[],indices=[];
+ function tri(a,b,c,level){if(level){const mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2],ab=mid(a,b),bc=mid(b,c),ca=mid(c,a);tri(a,ab,ca,level-1);tri(ab,b,bc,level-1);tri(ca,bc,c,level-1);tri(ab,bc,ca,level-1)}else for(const p of [a,b,c]){indices.push(vertices.length/3);vertices.push(...p,surfaceDepth(...p,g)+relief)}}
+ const v=geo.attributes.position.array;for(let i=0;i<v.length;i+=9)tri([v[i],v[i+1]],[v[i+3],v[i+4]],[v[i+6],v[i+7]],3);geo.dispose();return {vertices,indices};
 }

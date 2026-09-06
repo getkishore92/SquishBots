@@ -444,7 +444,7 @@ var faceFit = (t, b, face) => {
 };
 function characterEye(shape, e, index) {
   if (shape !== "codex") return superellipse(e);
-  const points = index ? [[-1.35, 0.48], [1.35, 0.48], [1.35, 0.92], [-1.35, 0.92]] : [[-1, -1], [1, 0], [-1, 1], [-1, 0.45], [0.05, 0], [-1, -0.45]];
+  const points = index ? [[-0.8, -0.18], [0.8, -0.18], [0.8, 0.18], [-0.8, 0.18]] : [[-1, -1], [1, 0], [-1, 1], [-1, 0.45], [0.05, 0], [-1, -0.45]];
   const angle = e.rot * Math.PI / 180, c = Math.cos(angle), s = Math.sin(angle);
   return points.map(([x, y], i) => `${i ? "L" : "M"} ${(e.cx + c * x * e.rx - s * y * e.ry).toFixed(3)} ${(e.cy + s * x * e.rx + c * y * e.ry).toFixed(3)}`).join(" ") + " Z";
 }
@@ -473,7 +473,7 @@ function compose(bands, fit) {
       face,
       petals: deco.petals,
       extra: deco.extra,
-      eyes: fit(t, body, face).map((e) => shape.name === "claude" ? { ...e, ry: e.ry * 0.4, n: 10, rot: 0 } : e)
+      eyes: fit(t, body, face).map((e, i) => shape.name === "claude" ? { ...e, ry: e.ry * 0.4, n: 10, rot: 0 } : shape.name === "codex" ? { ...e, cx: face.cx + (i ? 1 : -1) * face.rx * 0.48, cy: face.cy + face.ry * 0.14, rx: face.rx * 0.2, ry: face.ry * 0.43, rot: 0 } : e)
     };
   }
   function render(l, p, mo) {
@@ -748,10 +748,159 @@ var claude = { name: "claude", core: 0.84, body: (_t, b) => {
 var codex = { name: "codex", core: 0.82, body: (_t, b) => {
   b.n = 4;
   b.rot = 0;
+  b.ry = b.rx * 0.9;
   b.cy -= b.ry * 0.12;
-}, face: (b) => ({ cx: b.cx, cy: b.cy - b.ry * 0.14, rx: b.rx * 0.68, ry: b.ry * 0.36 }), path: (b) => rectPart(b, -1, -0.86, 2, 1.35, 0.32), decorate: (_t, b, out) => {
-  out.extra.push(rectPart(b, -0.52, 0.43, 1.04, 0.6, 0.15), rectPart(b, -0.84, 0.53, 0.27, 0.55, 0.13), rectPart(b, 0.57, 0.53, 0.27, 0.55, 0.13), rectPart(b, -0.46, 0.94, 0.34, 0.37, 0.075), rectPart(b, 0.12, 0.94, 0.34, 0.37, 0.075));
-} };
+}, face: (b) => ({ cx: b.cx, cy: b.cy - b.ry * 0.08, rx: b.rx * 0.58, ry: b.ry * 0.32 }), path: (b) => localPath(b, [
+  "M",
+  -0.68,
+  0.43,
+  "C",
+  -0.94,
+  0.4,
+  -1.02,
+  0.19,
+  -0.94,
+  0.02,
+  "C",
+  -1.13,
+  -0.19,
+  -1,
+  -0.49,
+  -0.79,
+  -0.55,
+  "C",
+  -0.8,
+  -0.78,
+  -0.61,
+  -0.94,
+  -0.39,
+  -0.9,
+  "C",
+  -0.3,
+  -1.17,
+  -0.04,
+  -1.19,
+  0.1,
+  -1.04,
+  "C",
+  0.31,
+  -1.18,
+  0.53,
+  -1.02,
+  0.55,
+  -0.84,
+  "C",
+  0.81,
+  -0.85,
+  0.92,
+  -0.64,
+  0.88,
+  -0.48,
+  "C",
+  1.08,
+  -0.37,
+  1.09,
+  -0.12,
+  0.96,
+  0.03,
+  "C",
+  1.02,
+  0.28,
+  0.88,
+  0.44,
+  0.66,
+  0.46,
+  "Q",
+  0.53,
+  0.48,
+  0.45,
+  0.49,
+  "C",
+  0.51,
+  0.53,
+  0.65,
+  0.65,
+  0.67,
+  0.83,
+  "Q",
+  0.7,
+  1.01,
+  0.58,
+  1.02,
+  "Q",
+  0.47,
+  1.03,
+  0.44,
+  0.83,
+  "Q",
+  0.42,
+  1,
+  0.31,
+  1.05,
+  "L",
+  0.31,
+  1.22,
+  "Q",
+  0.3,
+  1.34,
+  0.18,
+  1.34,
+  "Q",
+  0.06,
+  1.34,
+  0.06,
+  1.22,
+  "L",
+  0.06,
+  1.1,
+  "L",
+  -0.07,
+  1.1,
+  "L",
+  -0.07,
+  1.22,
+  "Q",
+  -0.08,
+  1.34,
+  -0.2,
+  1.34,
+  "Q",
+  -0.32,
+  1.34,
+  -0.32,
+  1.22,
+  "L",
+  -0.32,
+  1.05,
+  "Q",
+  -0.43,
+  1,
+  -0.44,
+  0.83,
+  "Q",
+  -0.48,
+  1.03,
+  -0.59,
+  1.02,
+  "Q",
+  -0.7,
+  1.01,
+  -0.67,
+  0.83,
+  "C",
+  -0.65,
+  0.66,
+  -0.54,
+  0.54,
+  -0.46,
+  0.49,
+  "Q",
+  -0.58,
+  0.47,
+  -0.68,
+  0.43,
+  "Z"
+]) };
 
 // core/vendor/blobatar/styles/blob.ts
 var BANDS = [
@@ -1205,8 +1354,8 @@ function validateConfig(input) {
     for (const [k, v] of Object.entries(o.palette)) assert(["head", "eye", "bg"].includes(k) && typeof v === "string" && /^#[\da-f]{6}$/i.test(v), "Palette colors must be six-digit hex for Blender");
   }
   if (o.expression !== void 0) assert(EXPRESSION_NAMES.includes(o.expression), "Unknown expression");
-  if (c.status !== void 0) assert(["online", "away", "offline", "thinking", "none"].includes(c.status), "Unknown status");
-  if (c.badge !== void 0) assert(Number.isInteger(c.badge) && c.badge >= 0, "badge must be a nonnegative integer");
+  delete c.status;
+  delete c.badge;
   const m = c.material ??= { preset: "resin" };
   assert(object(m), "material must be an object");
   assert(MATERIAL_PRESETS.includes(m.preset), "Unknown material preset");
@@ -1263,7 +1412,7 @@ function renderOptions(config) {
   return { ...options, ...palette2 ? { palette: palette2 } : {}, expression: options.expression === "happy" ? happyExpression : expression_exports[options.expression ?? "idle"] };
 }
 function screenPath(b) {
-  const x = b.cx - b.rx * 0.77, y = b.cy - b.ry * 0.57, w = b.rx * 1.54, h = b.ry * 0.84, r = b.rx * 0.14;
+  const x = b.cx - b.rx * 0.62, y = b.cy - b.ry * 0.48, w = b.rx * 1.24, h = b.ry * 0.78, r = b.rx * 0.16;
   return `M ${x + r} ${y} L ${x + w - r} ${y} Q ${x + w} ${y} ${x + w} ${y + r} L ${x + w} ${y + h - r} Q ${x + w} ${y + h} ${x + w - r} ${y + h} L ${x + r} ${y + h} Q ${x} ${y + h} ${x} ${y + h - r} L ${x} ${y + r} Q ${x} ${y} ${x + r} ${y} Z`;
 }
 function resolveConfig(input) {
@@ -1292,10 +1441,8 @@ function resolveConfig(input) {
     bodyCircles: body.filter((m) => m.kind === "circle"),
     eyes,
     colors: { head: layout.palette.head, eye: layout.palette.eye, bg: layout.palette.bg },
-    status: config.status ?? "none",
-    badge: config.badge ?? 0,
     material: config.material,
-    render: { ...config.render, depth: config.render.depth ?? (["claude", "codex"].includes(layout.shape) ? 0.2 : 0.95 * Math.min(layout.body.rx, layout.body.ry) / 32) }
+    render: { ...config.render, depth: config.render.depth ?? (layout.shape === "claude" ? 0.4 : 0.95 * Math.min(layout.body.rx, layout.body.ry) / 32) }
   };
 }
 function referenceSvg(config) {
@@ -1391,8 +1538,7 @@ var CATALOG = {
   traitKeys: allKeys,
   advancedControls,
   expressions: [...EXPRESSION_NAMES],
-  traitPosition: { min: 0, max: 0.999, step: 1e-3 },
-  statuses: ["none", "online", "away", "offline", "thinking"]
+  traitPosition: { min: 0, max: 0.999, step: 1e-3 }
 };
 function getTraitValues(input) {
   const config = validateConfig(input), o = config.options;

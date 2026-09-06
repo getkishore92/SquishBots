@@ -83,7 +83,7 @@ test('automatic eye colors agree across reference SVG and static motion payloads
 test('automatic depth follows body cross-section while explicit depth remains exact',()=>{
  for(const at of Object.values(SHAPES)){
   const r=resolveConfig({seed:'full-volume',options:{traits:{shape:at}}});
-  assert.equal(r.render.depth,['claude','codex'].includes(r.shape)?.2:.95*Math.min(r.layout.body.rx,r.layout.body.ry)/32);
+  assert.equal(r.render.depth,r.shape==='claude'?.4:.95*Math.min(r.layout.body.rx,r.layout.body.ry)/32);
   assert.equal(r.config.render.depth,undefined);
   const fixed=resolveConfig({seed:'full-volume',options:{traits:{shape:at}},render:{depth:.42}});
   assert.equal(fixed.render.depth,.42);assert.equal(fixed.config.render.depth,.42);
@@ -134,11 +134,11 @@ test('cloud puff remains a connected mesh across seeded proportions',async()=>{
 });
 
 
-test('assistant characters retain their separate limbs and a finite shallow mesh',()=>{
+test('assistant characters have finite meshes and Codex has a continuous plush body',()=>{
  for(const shape of ['claude','codex'])for(let i=0;i<12;i++){
   const r=resolveConfig({seed:`assistant-${i}`,options:{traits:{shape:SHAPES[shape]}}});
   const g=resolveGeometry(r),mesh=bodyMeshData(g);
-  assert.equal(r.shape,shape);assert.ok(g.parts.length>=6);assert.ok(g.parts.every(p=>p.flat));
+  assert.equal(r.shape,shape);if(shape==='claude'){assert.ok(g.parts.length>=6);assert.ok(g.parts.every(p=>p.flat))}else{assert.equal(r.bodyPaths.length,1);assert.ok(g.plush);assert.ok(!g.parts)}
   assert.ok(mesh.vertices.every(Number.isFinite));assert.ok(mesh.indices.every(i=>i>=0&&i<mesh.vertices.length/3));
   assert.equal(!!r.facePlate,shape==='codex');
  }

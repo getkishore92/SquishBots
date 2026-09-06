@@ -213,40 +213,23 @@ def sphere(name,loc,scale,mat):
     for p in ob.data.polygons:p.use_smooth=True
     return ob
 
-def accessory(name,color,loc,scale,opts,seed=0,badge=False):
-    """Added objects share the body finish while retaining semantic colors."""
-    mat=finish_material(material(name+' finish',color),opts)
-    ob=sphere(name,loc,scale,mat)
-    if opts.get('preset')!='fur':return ob
-    rng=random.Random(9107+seed);radius=max(scale);count=max(180,min(1800,int(1000*(radius/.2)**2)))
-    length=min(.022,opts.get('furLength',.075)*.24,min(scale)*.25)
-    curve=bpy.data.curves.new(name+' short fur','CURVE');curve.dimensions='3D';curve.resolution_u=1;curve.bevel_depth=.0009;curve.bevel_resolution=1
-    for _ in range(count):
-        z=rng.uniform(-1,1);a=rng.uniform(0,TAU);r=math.sqrt(1-z*z);v=Vector((r*math.cos(a),r*math.sin(a),z))
-        # Reserve a clean central face for the badge number. Fur stays on the
-        # rim and back, so changing material cannot hide the count.
-        if badge and v.y<0 and v.x*v.x+v.z*v.z<.78**2:continue
-        p=Vector(tuple(v[i]*scale[i] for i in range(3)));n=Vector(tuple(v[i]/scale[i] for i in range(3))).normalized();h=length*rng.uniform(.6,1.)
-        spline=curve.splines.new('POLY');spline.points.add(2)
-        for j in range(3):
-            t=j/2;q=p+n*h*t;
-            spline.points[j].co=(*q,1);spline.points[j].radius=(1-t)*.65+.025
-    fur=bpy.data.objects.new('Accessory pile • '+name,curve);bpy.context.collection.objects.link(fur);fur.location=loc;fur.data.materials.append(mat)
-    return ob
-
 def main():
     args=sys.argv[sys.argv.index('--')+1:];src=Path(args[0]);out=Path(args[1]);scene=json.loads(src.read_text());opts=scene.get('render',scene.get('config',{}).get('render',{}));studio='--studio' in args;transparent=opts.get('transparent',True) and not studio
     bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
     polys,eyes=contours(scene);layout=scene.get('layout',{});body=layout.get('body',scene.get('body',{}));cx=body.get('cx',50);cy=body.get('cy',50)
     flat=scene.get('shape') in ('claude','codex');composite=False
-    try:assert_star_union(polys,cx,cy)
-    except ValueError:composite=True
+    if scene.get('shape')!='codex':
+        try:assert_star_union(polys,cx,cy)
+        except ValueError:composite=True
     colors=scene.get('colors',{});head=scene.get('marks',[{}])[0].get('fill',colors.get('head','#36cfd9'));eye=eyes[0].get('fill',colors.get('eye','#091819'))
-    depth=float(opts.get('depth',.95*min(body.get('rx',32),body.get('ry',32))/32));rough=float(opts.get('roughness',.22));mopts=scene.get('material',scene.get('config',{}).get('material',{}));mat=finish_material(material('Body • '+mopts.get('preset','resin'),head,rough),mopts);ob,rs=inflate(polys[-1:] if composite else polys,cx,cy,depth,mat,flat)
+    depth=float(opts.get('depth',.95*min(body.get('rx',32),body.get('ry',32))/32));rough=float(opts.get('roughness',.22));mopts=scene.get('material',scene.get('config',{}).get('material',{}));mat=finish_material(material('Body • '+mopts.get('preset','resin'),head,rough),mopts);ob=None
+    if scene.get('plushGeometry'):
+        data=scene['plushGeometry'];v=data['vertices'];idx=data['indices'];ob=mesh('Codex • plush body',[(v[i],-v[i+2],v[i+1]) for i in range(0,len(v),3)],[tuple(idx[i:i+3]) for i in range(0,len(idx),3)],mat);rs=[1.]*256
+    else:ob,rs=inflate(polys[-1:] if composite else polys,cx,cy,depth,mat,flat)
     if composite:
         for p in polys[:-1]:
             px=sum(x for x,y in p)/len(p);py=sum(y for x,y in p)/len(p)
-            pd=min(depth,.95*min(max(x for x,y in p)-min(x for x,y in p),max(y for x,y in p)-min(y for x,y in p))/64)
+            pd=depth if flat else min(depth,.95*min(max(x for x,y in p)-min(x for x,y in p),max(y for x,y in p)-min(y for x,y in p))/64)
             part,_=inflate([p],px,py,pd,mat,flat)
             if mopts.get('preset')=='fur':fur_mesh(part,[],px,py,mat,mopts)
             part.location.x+=(px-cx)/32;part.location.z+=(cy-py)/32
@@ -261,11 +244,14 @@ def main():
                 q=(a+b)/2
                 if q*(pole+(r-pole)*q**3)<math.hypot(x,z):a=q
                 else:b=q
-            surface=depth if flat else depth*math.sqrt(max(.001,1-min(.999,(a+b)/2)**2))
+            surface=scene['plushEyeDepths'][i] if scene.get('plushEyeDepths') else depth if flat else depth*math.sqrt(max(.001,1-min(.999,(a+b)/2)**2))
             bpy.ops.mesh.primitive_uv_sphere_add(segments=32,ring_count=24,radius=radius,location=(x,-surface-mopts.get('furLength',.22)*.95-.025,z))
             eye_ob=bpy.context.object;eye_ob.name='Fur • round eye';eye_ob.scale=(max(.65,min(1.15,pose['esx']+i*pose['esx2'])),.68,max(.045,min(1,pose['esy']+i*pose['esy2'])))
             eye_ob.rotation_euler.y=(pose['tilt']+i*pose['tilt2'])*(1 if i else -1)*math.pi/180;eye_ob.data.materials.append(black)
             for polygon in eye_ob.data.polygons:polygon.use_smooth=True
+    elif scene.get('plushFace'):
+        for i,data in enumerate(scene['plushFace']):
+            v=data['vertices'];idx=data['indices'];mesh('Codex • screen' if i==0 else 'Codex • terminal eye',[(v[j],-v[j+2],v[j+1]) for j in range(0,len(v),3)],[tuple(idx[j:j+3]) for j in range(0,len(idx),3)],material('Screen' if i==0 else 'Terminal',data['fill'],.65))
     else:
         plate=scene.get('facePlate')
         if plate:eye_mesh(plate,cx,cy,rs,depth+.035,material('Codex • screen',plate['fill'],.65),-1,True)
@@ -281,16 +267,6 @@ def main():
     if match:dy=float(match.group(1))
     for ob in list(bpy.context.scene.objects):ob.location.x+=(cx-50)/32;ob.location.z+=(50-cy-dy)/32
 
-    status=scene.get('status',scene.get('config',{}).get('status','none'))
-    if status in ('online','away','offline','busy'):
-        accessory('Status • '+status,{'online':'#31efa9','away':'#ffb900','offline':'#787884','busy':'#fb676b'}[status],(.82,-.30,.89),(.20,.20,.20),mopts,1)
-    if status=='thinking':
-        for i in range(3):accessory('Thinking dot '+str(i),'#88889a',(-.24+i*.24,-.32,-1.15),(.075,.075,.075),mopts,10+i)
-    badge=scene.get('badge',scene.get('config',{}).get('badge',0))
-    if badge:
-        accessory('Unread badge','#ffffff',(.80,-.84,-.67),(.31,.085,.31),mopts,20,badge=True)
-        cv=bpy.data.curves.new('Unread count','FONT');cv.body='99+' if int(badge)>99 else str(badge);cv.align_x='CENTER';cv.align_y='CENTER';cv.size=.24 if int(badge)>99 else .30;cv.extrude=.014;cv.bevel_depth=.0018;cv.bevel_resolution=3;cv.resolution_u=12
-        text=bpy.data.objects.new('Unread count',cv);bpy.context.collection.objects.link(text);text.location=(.80,-.942,-.67);text.rotation_euler=(math.pi/2,0,0);text.data.materials.append(finish_material(material('Readable badge ink','#111318'),{'preset':'clay','roughness':.65,'textureStrength':0}))
     light('Key • broad softbox',(-3,-4,4),420,3.0,size_y=4.0);light('Cool edge',(3,.5,3),520,2.5,(.77,.86,1));light('Front fill',(2,-4,.1),95,3,(1,.9,.82));light('Top strip',(-1,1,3),230,2,size_y=.8)
     world=bpy.data.worlds.new('Studio ambience');bpy.context.scene.world=world;world.use_nodes=True;world.node_tree.nodes['Background'].inputs[0].default_value=(.14,.16,.20,1);world.node_tree.nodes['Background'].inputs[1].default_value=.32
     if studio:

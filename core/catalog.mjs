@@ -48,7 +48,6 @@ export const CATALOG = {
  controls,axes:controls,allKeys,traitKeys:allKeys,advancedControls,
  expressions:[...EXPRESSION_NAMES],
  traitPosition:{min:0,max:.999,step:.001},
- statuses:['none','online','away','offline','thinking'],
 };
 
 /** Normalized slider readback uses the original independent trait streams. */

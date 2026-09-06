@@ -65,7 +65,7 @@ export type Band = readonly [Shape, number];
 
 function characterEye(shape:string,e:Eye,index:number):string {
  if(shape!=='codex')return superellipse(e);
- const points=index?[[-1.35,.48],[1.35,.48],[1.35,.92],[-1.35,.92]]:[[-1,-1],[1,0],[-1,1],[-1,.45],[.05,0],[-1,-.45]];
+ const points=index?[[-.8,-.18],[.8,-.18],[.8,.18],[-.8,.18]]:[[-1,-1],[1,0],[-1,1],[-1,.45],[.05,0],[-1,-.45]];
  const angle=e.rot*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
  return points.map(([x,y],i)=>`${i?'L':'M'} ${(e.cx+c*x*e.rx-s*y*e.ry).toFixed(3)} ${(e.cy+s*x*e.rx+c*y*e.ry).toFixed(3)}`).join(' ')+' Z';
 }
@@ -100,7 +100,7 @@ export function compose(bands: Band[], fit: Fit) {
       body, face,
       petals: deco.petals,
       extra: deco.extra,
-      eyes: fit(t, body, face).map(e=>shape.name==='claude'?{...e,ry:e.ry*.4,n:10,rot:0}:e),
+      eyes: fit(t, body, face).map((e,i)=>shape.name==='claude'?{...e,ry:e.ry*.4,n:10,rot:0}:shape.name==='codex'?{...e,cx:face.cx+(i?1:-1)*face.rx*.48,cy:face.cy+face.ry*.14,rx:face.rx*.20,ry:face.ry*.43,rot:0}:e),
     };
   }
 
