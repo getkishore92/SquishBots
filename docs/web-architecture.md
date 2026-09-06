@@ -20,9 +20,9 @@ SquishBots has one configuration resolver, a React configurator, a Three.js prev
 }
 ```
 
-`seed` maps to Blobatar's name. `options` retains source trait, palette, hue, tone, background, normalization, contrast and expression settings. JSON stores expressions by name; the resolver maps each name to the source expression object. `status` and `badge` control presence decorations. Renderer-specific settings live under `material` and `render`.
+`seed` maps to Blobatar's name. `options` retains source trait, palette, hue, tone, normalization, contrast and expression settings. JSON stores expressions by name; the resolver maps each name to the source expression object. `status` and `badge` control presence decorations. Renderer-specific settings live under `material` and `render`.
 
-A missing trait uses the seed, a number pins its normalized value, and an array narrows it to seed-selected alternatives. An empty array behaves as missing. The catalog exposes 44 trait keys through curated and advanced controls. Shape and tone pools preserve ordered alternatives. Slider edits use three decimal places.
+A missing trait uses the seed, a number pins its normalized value, and an array narrows it to seed-selected alternatives. An empty array behaves as missing. The catalog exposes trait keys through curated and advanced controls. Shape and tone pools preserve ordered alternatives. Slider edits use three decimal places.
 
 Shuffle chooses another name and preserves pinned traits. Unlocked material, color, expression and presence settings also change; their locks preserve them. Explicit eye colors remain manual. Without an eye override, custom body colors receive a contrasting light or dark eye color. Material presets are resin, clay, fur and glass; their current defaults come from the resolver catalog rather than a separate geometry vocabulary.
 
@@ -44,7 +44,7 @@ Configuration hashes identify resolved input, including material settings and th
 
 The frontend debounces configuration requests and discards stale responses. Picker thumbnails are bundled static PNGs: neutral spheres for materials, neutral faces for expressions, and fixed silhouettes for shapes. Avatar edits update selection highlights without regenerating these images.
 
-Session storage retains configuration, locks, pools, interaction mode, motion and gaze. Local storage retains the theme. Mobile uses a tabbed inspector; desktop shows a scrollable inspector alongside the stage. JSON panels, an iframe widget and a crowd view are not part of the current editor.
+Session storage retains configuration, locks, pools, interaction mode, motion and gaze. Local storage retains the theme. Mobile uses a large preview, four customization tabs, collapsed fine-tuning and an export bottom sheet; desktop shows a scrollable inspector alongside the stage. The header links to GitHub for starring the project. Legacy backdrop settings are normalized to false. Cloud uses a continuous eight-lobe outline. Happy uses open eyes with separate raised brow marks in both renderers. The browser schedules occasional blinks independently of hover motion, with reduced-motion and static-capture suppression. JSON panels, an iframe widget and a crowd view are not part of the current editor.
 
 ## Local server and export
 
@@ -59,3 +59,11 @@ The server binds to 127.0.0.1 and is intended for local use. A public multi-user
 ## Checks
 
 `npm test` checks source geometry, sparse traits, narrowing, expressions, motion math, hashing, material bounds and eye contrast. `npm run typecheck` and `npm run build` check the frontend. `npm run test:api` performs API checks and a real Blender render. Browser interaction and visual review remain separate from these code checks.
+
+## Avatar audio prototype
+
+`use-avatar-audio.js` plays bundled shape/expression WAV clips after user actions.
+The initial clip covers Capsule / Happy. Missing combinations remain silent.
+The header mute control persists in local storage and stops current playback.
+New sounds replace earlier sounds; hidden tabs stop playback. Blink animations
+and page loading are silent. Audio is not mixed into animation exports.

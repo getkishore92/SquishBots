@@ -30,7 +30,8 @@ export function validateConfig(input) {
  if(o.traits!==undefined) {assert(object(o.traits),'traits must be an object');for(const [k,v] of Object.entries(o.traits)) assert(finite(v)||(Array.isArray(v)&&v.length<=256&&v.every(finite)),`Invalid trait ${k}`)}
  for(const k of ['hue','tone'])if(o[k]!==undefined)assert(finite(o[k]),`${k} must be finite`);
  for(const k of ['normalize','contrast'])if(o[k]!==undefined)assert(typeof o[k]==='boolean',`${k} must be boolean`);
- if(o.background!==undefined)assert([true,false,'square','circle','squircle'].includes(o.background),'Invalid background');
+ // Migrate legacy backdrop settings; the editor no longer supports plates.
+ if(o.background!==undefined)o.background=false;
  if(o.palette!==undefined){assert(object(o.palette),'palette must be an object');for(const [k,v] of Object.entries(o.palette))assert(['head','eye','bg'].includes(k)&&typeof v==='string'&&/^#[\da-f]{6}$/i.test(v),'Palette colors must be six-digit hex for Blender')}
  if(o.expression!==undefined)assert(EXPRESSION_NAMES.includes(o.expression),'Unknown expression');
  if(c.status!==undefined)assert(['online','away','offline','thinking','none'].includes(c.status),'Unknown status');
@@ -62,6 +63,14 @@ export function shuffleConfig(config, seed=randomBytes(12).toString('hex')) {ret
 // head bypasses that palette construction, so adapt only that override case.
 // Keep the automatic eye out of the saved config: changing the head must remain
 // automatic until the user explicitly picks an eye color.
+// SquishBots happy face keeps open eyes and adds raised brows outside source marks.
+const happyExpression={...expressions.happy,p:{...expressions.happy.p,esx:.95,esy:.85,esx2:0,esy2:0,tilt:0,tilt2:0}};
+function expressionBrows(layout,expression){
+ return layout.eyes.map((eye,i)=>{const side=i?1:-1,w=Math.max(2.8,eye.rx*1.15),x=eye.cx,y=eye.cy-eye.ry-(expression==='wink'&&!i?5:4),arch=expression==='wink'?(i?1.8:4):3;
+ const left=y-side*.7,right=y+side*.7;
+ return {kind:'path',fill:layout.palette.eye,d:`M ${x-w} ${left} Q ${x} ${y-arch} ${x+w} ${right} Q ${x+w+.5} ${right+1.2} ${x+w-.5} ${right+1.4} Q ${x} ${y-arch+2.3} ${x-w+.5} ${left+1.4} Q ${x-w-.5} ${left+1.2} ${x-w} ${left} Z`};
+ });
+}
 function renderOptions(config) {
  const options=config.options;
  let palette=options.palette;
@@ -74,7 +83,7 @@ function renderOptions(config) {
   const contrast=hex=>{const eye=luminance(hex);return (Math.max(head,eye)+.05)/(Math.min(head,eye)+.05)};
   palette={...palette,eye:contrast(softWhite)>contrast(dark)?softWhite:dark};
  }
- return {...options,...(palette?{palette}:{}),expression:expressions[options.expression??'idle']};
+ return {...options,...(palette?{palette}:{}),expression:options.expression==='happy'?happyExpression:expressions[options.expression??'idle']};
 }
 export function resolveConfig(input) {
  const config=validateConfig(input), opts=renderOptions(config);
@@ -86,6 +95,7 @@ export function resolveConfig(input) {
  return {schemaVersion:1,source:SOURCE,name:config.seed,seed:config.seed,config,
   configHash:createHash('sha256').update(canonical({source:SOURCE,config})).digest('hex'),
   shape:layout.shape, marks, transform, bg, layout, motion,
+  brows:['happy','wink'].includes(config.options.expression)?expressionBrows(layout,config.options.expression):[],
   bodyPaths:body.filter(m=>m.kind==='path').map(m=>m.d),
   bodyCircles:body.filter(m=>m.kind==='circle'), eyes,
   colors:{head:layout.palette.head,eye:layout.palette.eye,bg:layout.palette.bg},

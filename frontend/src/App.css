@@ -37,3 +37,29 @@ button:not(:disabled),a,[role="tab"],[role="switch"],[role="checkbox"],[data-slo
 #material-preset-clay img{filter:sepia(1) saturate(1.5) hue-rotate(100deg)}
 #material-preset-fur img{filter:sepia(1) saturate(1.5) hue-rotate(245deg)}
 #material-preset-glass img{filter:sepia(1) saturate(1.8) hue-rotate(150deg)}
+
+/* Mobile is a scrollable editor: stage first, then customization and details. */
+.export-overlay{position:fixed;inset:0;z-index:49;background:rgb(0 0 0 / .55)}
+.export-sheet{position:fixed;z-index:50;bottom:0;left:0;right:0;max-height:85dvh;overflow-y:auto;background:var(--background);color:var(--foreground);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:12px 24px max(24px,env(safe-area-inset-bottom));box-shadow:0 -12px 60px #0003}
+.sheet-handle{width:36px;height:4px;background:var(--muted-foreground);opacity:.4;border-radius:4px;margin:0 auto 16px}.sheet-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.export-sheet .export-controls{display:grid;grid-template-columns:1fr 1fr;gap:16px}.export-sheet .export-controls button:not([role=checkbox]){height:48px;font-size:14px;width:100%}.export-sheet .export-controls>button:last-child{grid-column:1/-1}.export-sheet .export-controls label{min-height:44px;font-size:14px}.export-sheet .export-status{font-size:13px;margin-top:20px}
+@media(max-width:900px){
+ html,body,#root{height:auto;min-height:100%;overflow:visible}
+ .studio-shell{display:flex;flex-direction:column;height:auto;min-height:100dvh;overflow:visible}
+ .studio-header{height:64px;flex-shrink:0;padding:0 16px}
+ .studio-stage{flex:none;padding:12px 16px 18px;overflow:visible;min-height:calc(100svh - 240px)}
+ .studio-toolbar{gap:10px}.studio-toolbar .name-controls{height:44px}.studio-toolbar .name-controls input,.studio-toolbar .name-controls button{height:42px;font-size:14px}
+ .interaction-controls{justify-content:space-between;gap:4px}.mode-tabs{width:126px;min-width:126px}.mode-tabs [data-slot=tabs-list]{height:44px}.mode-tabs [data-slot=tabs-trigger]{font-size:14px}
+ .studio-toolbar .interaction-controls>button{width:44px;height:44px}.studio-toolbar .follow-control{display:none}.motion-select{height:44px;width:112px;font-size:13px}
+ .stage-visual{flex:1 0 auto;min-height:280px;height:clamp(280px,43svh,460px)}
+ .stage-bottom{display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:0}
+ .preview-swatches{width:100%;justify-content:flex-start;overflow-x:auto;gap:0;padding:5px 2px;scrollbar-width:none}.preview-swatches button{position:relative;width:44px;height:44px;flex:0 0 44px;background:transparent!important;border:0;box-shadow:none}.preview-swatches button::before{content:'';position:absolute;inset:7px;border-radius:50%;background:var(--swatch);border:1px solid #8884}.preview-swatches button[aria-pressed=true]::before{outline:2px solid var(--foreground);outline-offset:3px}
+ .preview-caption{margin:0}.preview-caption .interaction-hint{font-size:12px}.preview-caption .preview-label{display:none}.mobile-export{height:44px;width:100%;font-size:14px}
+ .studio-inspector{flex:none;overflow:visible}.mobile-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;height:56px;padding:6px 12px;border-radius:0;border-bottom:1px solid var(--border);background:var(--background)}.mobile-tabs [data-slot=tabs-trigger]{height:44px;font-size:14px;padding:0 4px}.mobile-tab-panel{margin:0;padding:20px 16px;min-height:230px}.picker-tile{height:100px}.picker-tile img{width:56px;height:56px}
+ .mobile-fine-tune{padding:20px 16px 28px;border-top:1px solid var(--border)}.mobile-fine-tune>div>button{height:48px}.mobile-customization section button[data-slot=collapsible-trigger]{min-height:44px}.mobile-customization section label{min-height:32px}.studio-footer{margin-top:16px;padding:20px 16px 28px;font-size:12px;gap:12px;line-height:1.8}
+}
+.header-actions{display:flex;align-items:center;gap:10px}.github-star{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:500;background:var(--card)}.github-star:focus-visible{outline:2px solid var(--ring);outline-offset:3px}@media(max-width:900px){.header-actions{gap:6px}.github-star{height:44px;padding:0 9px}.studio-header .header-actions>button{height:44px;width:44px}}
+.accordion-controls{min-width:0;max-width:100%}.accordion-controls [data-slot=slider]{width:100%;min-width:0}.accordion-controls [data-slot=slider],.accordion-controls [data-slot=slider-track],.accordion-controls [data-slot=slider-thumb]{cursor:pointer}
+
+@media(max-width:900px){.studio-footer{flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center}.studio-footer .source-credits{white-space:nowrap}.studio-footer .credit-label{display:none}.studio-footer .remix-credit{margin:0}.studio-footer a{display:inline-block}.studio-footer .source-credits>span{margin:0 6px}}
+@media(max-width:400px){.studio-header{padding-inline:12px}.studio-header .header-actions{gap:2px}.github-star{padding-inline:7px}.github-star>svg:last-child{display:none}.studio-header .header-actions>button{width:40px}.studio-header>button>span:last-child{font-size:16px}}

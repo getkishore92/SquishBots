@@ -112,3 +112,23 @@ test('ghost and monster build closed finite surfaces across seeds; automatic sha
   for(const shape of ['ghost','monster']){const r=resolveConfig({seed:'shape-'+i,options:{traits:{shape:SHAPES[shape]}}});const g=resolveGeometry(r),mesh=bodyMeshData(g,12);assert.equal(r.shape,shape);assert.ok(!g.parts);assert.ok(mesh.vertices.every(Number.isFinite));assert.ok(mesh.indices.every(v=>v>=0&&v<mesh.vertices.length/3));}
  }
 });
+
+test('legacy backdrop settings resolve without a background plate',()=>{
+ for(const background of [true,'square','circle','squircle']){
+  const result=resolveConfig({seed:'legacy',options:{background}});
+  assert.equal(result.config.options.background,false);
+  assert.ok(!result.bg);
+ }
+});
+
+test('cloud puff remains a connected mesh across seeded proportions',async()=>{
+ const {resolveGeometry,bodyMeshData}=await import('../web/geometry.js');
+ for(let i=0;i<20;i++){
+  const r=resolveConfig({seed:`cloud-${i}`,options:{traits:{shape:SHAPES.cloud}}});
+  assert.equal(r.bodyPaths.length,1);
+  assert.equal(r.bodyCircles.length,0);
+  const geometry=resolveGeometry(r);
+  assert.ok(!geometry.parts);
+  assert.ok(bodyMeshData(geometry).vertices.every(Number.isFinite));
+ }
+});

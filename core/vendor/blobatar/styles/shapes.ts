@@ -10,7 +10,7 @@
  *
  * Shapes that are parameterizations of another share its implementation rather
  * than restating it: `boxy` is `round` with a squarer `n` and a tilt, `hexagon`
- * is `triangle` with six sides, `cloud` is `organic` with lobes. They share it
+ * is `triangle` with six sides, `cloud` uses a local puff outline. They share it
  * by naming the same function (`path: spline`), never by spreading the parent
  * value — `{ ...round, core: 0.86 }` reads better and defeats tree-shaking
  * completely, measured at ~920 B for a single shape. See ADR-0007.
@@ -109,20 +109,19 @@ export const nub: Shape = {
   },
 };
 
-/** `organic`, with lobes on the upper half. */
+/** SquishBots cloud: one continuous puff outline with eight rounded lobes. */
 export const cloud: Shape = {
-  name: "cloud", core: 0.78, face: splineFace, path: spline,
-  decorate: (t, b, out) => {
-    const count = t.int("cloud.n", 4, 6);
-    for (let i = 0; i < count; i++) {
-      const a = Math.PI + (Math.PI * (i + 0.5)) / count;
-      out.petals.push({
-        cx: b.cx + Math.cos(a) * b.rx * 0.8,
-        cy: b.cy + Math.sin(a) * b.rx * 0.5,
-        r: b.rx * t.num(`cloud.r${i}`, 0.44, 0.62),
-      });
-    }
-  },
+ name:'cloud',core:.88,face:shrunk(.68),body:(_t,b)=>{b.n=2;b.rot=0},
+ path:b=>localPath(b,[
+  'M',-.33,-.73,
+  'C',-.23,-1.12,.25,-1.12,.36,-.76,
+  'C',.68,-.91,.94,-.63,.88,-.35,
+  'C',1.23,-.2,1.19,.33,.8,.38,
+  'C',.79,.75,.49,.91,.24,.75,
+  'C',.06,1,-.26,.99,-.43,.77,
+  'C',-.73,.94,-1,.72,-.99,.44,
+  'C',-1.35,.33,-1.32,-.18,-1,-.31,
+  'C',-1.03,-.68,-.69,-.94,-.33,-.73,'Z'])
 };
 
 export const droplet: Shape = {

@@ -239,7 +239,7 @@ def main():
             part.location.x+=(px-cx)/32;part.location.z+=(cy-py)/32
     if mopts.get('preset')=='fur':fur_mesh(ob,eyes,cx,cy,mat,mopts)
     emat=finish_material(material('Eyes • '+mopts.get('preset','resin'),eye,rough),mopts)
-    for i,e in enumerate(eyes):
+    for i,e in enumerate(eyes+scene.get('brows',[])):
         eye_ob=eye_mesh(e,cx,cy,rs,depth,emat,i)
         if mopts.get('preset')=='fur':eye_fur_mesh(eye_ob,emat,mopts,i)
     # Preserve source canvas placement and baked expression body wrapper translation.
@@ -247,9 +247,7 @@ def main():
     match=re.search(r'translate\(\s*0[ ,]+([-\d.]+)\s*\)',wrap)
     if match:dy=float(match.group(1))
     for ob in list(bpy.context.scene.objects):ob.location.x+=(cx-50)/32;ob.location.z+=(50-cy-dy)/32
-    bg=scene.get('bg')
-    if bg:
-        points=path_points(bg['d']);mesh('Source background plate',[((x-50)/32,depth+.12,(50-z)/32) for x,z in points],[tuple(range(len(points)))],material('Background plate',bg['fill'],.78))
+
     status=scene.get('status',scene.get('config',{}).get('status','none'))
     if status in ('online','away','offline','busy'):
         accessory('Status • '+status,{'online':'#31efa9','away':'#ffb900','offline':'#787884','busy':'#fb676b'}[status],(.82,-.30,.89),(.20,.20,.20),mopts,1)

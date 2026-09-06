@@ -31,15 +31,25 @@ test('browser gaze matches canonical projection and pursuit near the limb',()=>{
  assert.equal(port.pursuit(16),pursuit(16));
 });
 
-test('motion contract uses unposed eyes and leaves static marks unchanged',()=>{
+test('motion contract uses unposed eyes and matches static expression marks',()=>{
  for(const expression of EXPRESSION_NAMES){
   const config={seed:'expression-test',options:{expression,traits:{shape:.99}}};
   const resolved=resolveConfig(config);
-  assert.deepEqual(resolved.motion.pose,expressions[expression].p);
+  if(expression==='happy'){assert.ok(resolved.motion.pose.esy>.7);assert.equal(resolved.brows.length,2)}else{assert.deepEqual(resolved.motion.pose,expressions[expression].p);if(expression==='wink')assert.equal(resolved.brows.length,2);else assert.deepEqual(resolved.brows,[])}
   assert.deepEqual(resolved.motion.reactionPoses,{press:expressions.happy.p,drag:expressions.surprised.p,edge:expressions.scared.p});
   assert.deepEqual(resolved.motion.seeds,idleSeeds(config.seed,config.options));
-  assert.deepEqual(resolved.marks,_marks(config.seed,{...config.options,expression:expressions[expression]}).marks);
+  assert.deepEqual(resolved.marks,_marks(config.seed,{...config.options,expression:{...expressions[expression],p:resolved.motion.pose}}).marks);
   assert.deepEqual(resolved.motion.baseMarks,_marks(config.seed,{...config.options,expression:expressions.idle}).marks);
   assert.deepEqual(port.lerpPose(IDENT,expressions[expression].p,.4),lerpPose(IDENT,expressions[expression].p,.4));
  }
+});
+
+test('natural blink closes briefly and returns to fully open eyes',()=>{
+ assert.equal(port.naturalBlink(-1),1);
+ assert.equal(port.naturalBlink(0),1);
+ assert.ok(port.naturalBlink(65)<.07);
+ assert.ok(port.naturalBlink(120)>port.naturalBlink(65));
+ assert.equal(port.naturalBlink(190),1);
+ assert.equal(port.naturalBlink(6000),1);
+ for(let t=0;t<190;t++)assert.ok(port.naturalBlink(t)>=.05&&port.naturalBlink(t)<=1);
 });

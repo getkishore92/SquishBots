@@ -1341,3 +1341,10 @@ export function step(i           )             {
  * so a `Mark` is already normalised for `project` and neither number changes
  * when the page scrolls or the blobatar is drawn at a different size.
  */
+
+// One quiet blink: quick close, softer reopening, then fully open again.
+export function naturalBlink(elapsed){
+ if(elapsed<0||elapsed>=190)return 1;
+ const t=elapsed<65?elapsed/65:1-(elapsed-65)/125;
+ return 1-.94*Math.sin(t*Math.PI/2)**2;
+}

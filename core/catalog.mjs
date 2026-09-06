@@ -21,7 +21,6 @@ const controls = [
  control('gaze.y','Gaze y','eyes'),
  control('tone','Tone','color','tone'),
  control('hue','Hue','color'),
- control('cloud.n','Lobes','decoration','slider',['cloud'],3),
  control('nub.n','Nubs','decoration','slider',['nub'],2),
  control('nub.a0','Nub angle','decoration','slider',['nub']),
  control('nub.r0','Nub size','decoration','slider',['nub']),
@@ -33,14 +32,12 @@ const allKeys = [
  'shape','hue','tone','body.r','body.ratio','body.x','body.y','body.n','body.rot','body.pts',
  ...Array.from({length:8},(_,i)=>`body.r${i}`),
  'gaze.x','gaze.y','eye.rx','eye.ratio','eye.scale','eye.stretch','eye.gap','eye.n','eye.lean','eye.lean2','eye.dy',
- 'cloud.n',...Array.from({length:6},(_,i)=>`cloud.r${i}`),
  'nub.n','nub.a0','nub.a1','nub.r0','nub.r1','poly.round','capsule.squat','droplet.tip',
 ];
 const curated = new Set(controls.map(c=>c.key));
 const advancedControls = allKeys.filter(key=>!curated.has(key)).map(key=>{
  let when;
- if(/^body\.(pts|r\d)$/.test(key))when=['organic','cloud'];
- if(key.startsWith('cloud.'))when=['cloud'];
+ if(/^body\.(pts|r\d)$/.test(key))when=['organic'];
  if(key.startsWith('nub.'))when=['nub'];
  return control(key,key,'advanced','slider',when,key==='body.pts'?3:undefined);
 });
@@ -51,7 +48,6 @@ export const CATALOG = {
  controls,axes:controls,allKeys,traitKeys:allKeys,advancedControls,
  expressions:[...EXPRESSION_NAMES],
  traitPosition:{min:0,max:.999,step:.001},
- background:[false,'square','circle','squircle'],
  statuses:['none','online','away','offline','thinking'],
 };
 
