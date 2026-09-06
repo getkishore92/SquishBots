@@ -6,7 +6,7 @@ test('normalization agrees across Unicode and case',()=>{
  assert.deepEqual(a.marks,b.marks);
  assert.notDeepEqual(a.marks,resolveConfig({seed:' ÉLISE ',options:{normalize:false}}).marks);
 });
-test('all eleven supported shapes retain exact eye and body marks',()=>{
+test('all thirteen supported shapes retain exact eye and body marks',()=>{
  for(const [shape,at] of Object.entries(SHAPES)){
  const r=resolveConfig({seed:'review',options:{traits:{shape:at}}});
  assert.equal(r.shape,shape);assert.equal(r.eyes.length,2);assert.ok(r.bodyPaths.length);assert.ok(r.marks.every(m=>m.kind==='path'?m.d.length>10:Number.isFinite(m.r)));
@@ -19,7 +19,7 @@ test('shuffle changes seed while preserving sparse pins and narrowing',()=>{
 });
 test('empty arrays match absent override; upstream clamps preserved',()=>{
  assert.deepEqual(resolveConfig({seed:'test'}).marks,resolveConfig({seed:'test',options:{traits:{shape:[]}}}).marks);
- assert.equal(resolveConfig({seed:'test',options:{traits:{shape:1}}}).shape,'triangle');
+ assert.equal(resolveConfig({seed:'test',options:{traits:{shape:1}}}).shape,'codex');
 });
 test('every expression resolves serializable geometry and body transforms',()=>{
  for(const expression of EXPRESSION_NAMES){const r=resolveConfig({seed:'review',options:{expression}});assert.doesNotThrow(()=>JSON.parse(JSON.stringify(r)));assert.equal(r.eyes.length,2)}
@@ -83,7 +83,7 @@ test('automatic eye colors agree across reference SVG and static motion payloads
 test('automatic depth follows body cross-section while explicit depth remains exact',()=>{
  for(const at of Object.values(SHAPES)){
   const r=resolveConfig({seed:'full-volume',options:{traits:{shape:at}}});
-  assert.equal(r.render.depth,.95*Math.min(r.layout.body.rx,r.layout.body.ry)/32);
+  assert.equal(r.render.depth,['claude','codex'].includes(r.shape)?.2:.95*Math.min(r.layout.body.rx,r.layout.body.ry)/32);
   assert.equal(r.config.render.depth,undefined);
   const fixed=resolveConfig({seed:'full-volume',options:{traits:{shape:at}},render:{depth:.42}});
   assert.equal(fixed.render.depth,.42);assert.equal(fixed.config.render.depth,.42);
@@ -106,7 +106,7 @@ test('all four material presets resolve distinct reproducible finishes without c
 
 import {resolveGeometry,bodyMeshData} from '../web/geometry.js';
 test('ghost and monster build closed finite surfaces across seeds; automatic shapes exclude sun',()=>{
- assert.equal(Object.keys(SHAPES).length,11);assert.equal(SHAPES.sun,undefined);
+ assert.equal(Object.keys(SHAPES).length,13);assert.equal(SHAPES.sun,undefined);
  for(let i=0;i<100;i++){
   assert.notEqual(resolveConfig({seed:'auto-'+i}).shape,'sun');
   for(const shape of ['ghost','monster']){const r=resolveConfig({seed:'shape-'+i,options:{traits:{shape:SHAPES[shape]}}});const g=resolveGeometry(r),mesh=bodyMeshData(g,12);assert.equal(r.shape,shape);assert.ok(!g.parts);assert.ok(mesh.vertices.every(Number.isFinite));assert.ok(mesh.indices.every(v=>v>=0&&v<mesh.vertices.length/3));}
@@ -130,5 +130,16 @@ test('cloud puff remains a connected mesh across seeded proportions',async()=>{
   const geometry=resolveGeometry(r);
   assert.ok(!geometry.parts);
   assert.ok(bodyMeshData(geometry).vertices.every(Number.isFinite));
+ }
+});
+
+
+test('assistant characters retain their separate limbs and a finite shallow mesh',()=>{
+ for(const shape of ['claude','codex'])for(let i=0;i<12;i++){
+  const r=resolveConfig({seed:`assistant-${i}`,options:{traits:{shape:SHAPES[shape]}}});
+  const g=resolveGeometry(r),mesh=bodyMeshData(g);
+  assert.equal(r.shape,shape);assert.ok(g.parts.length>=6);assert.ok(g.parts.every(p=>p.flat));
+  assert.ok(mesh.vertices.every(Number.isFinite));assert.ok(mesh.indices.every(i=>i>=0&&i<mesh.vertices.length/3));
+  assert.equal(!!r.facePlate,shape==='codex');
  }
 });

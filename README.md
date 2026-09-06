@@ -6,7 +6,7 @@ Blobatar supplies seeded shapes, traits, palettes, expressions and motion mathem
 
 ## Features
 
-- Eleven shape families, fourteen expressions and 44 trait controls.
+- Thirteen shape families, including Claude and Codex, with fourteen expressions and fine-tuning controls.
 - Resin, clay, fur and glass finishes, applied to the body, eyes and presence decorations.
 - Name-based generation, pinned traits, shape and tone pools, and locks for shuffling.
 - Body and eye colors, automatic eye contrast, background shapes, status dots and unread badges.

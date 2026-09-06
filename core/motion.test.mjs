@@ -53,3 +53,13 @@ test('natural blink closes briefly and returns to fully open eyes',()=>{
  assert.equal(port.naturalBlink(6000),1);
  for(let t=0;t<190;t++)assert.ok(port.naturalBlink(t)>=.05&&port.naturalBlink(t)<=1);
 });
+
+test('fur eyes use round geometry with bounded blink and expression scales',async()=>{
+ const {furEyeDimensions,eyeOpening}=await import('../web/fur-eyes.js');
+ for(const shape of [.11,.997,.999]){
+  const resolved=resolveConfig({seed:'fur-test',options:{traits:{shape}}});const {radius}=furEyeDimensions(resolved.motion.baseLayout);
+  assert.ok(radius>=.055&&radius<=.21);
+ }
+ assert.equal(eyeOpening(IDENT,0,1),1);assert.equal(eyeOpening(IDENT,0,0),0);
+ assert.ok(eyeOpening(expressions.wink.p,1,1)<eyeOpening(expressions.wink.p,0,1));
+});

@@ -169,3 +169,14 @@ export const triangle: Shape = {
   },
   face: b => ({ cx: b.cx, cy: b.cy + b.ry * 0.1, rx: b.rx * 0.54, ry: b.ry * 0.36 }),
 };
+
+function rectPart(b:Body,x:number,y:number,w:number,h:number,r=.055):string {
+ return localPath(b,['M',x+r,y,'L',x+w-r,y,'Q',x+w,y,x+w,y+r,'L',x+w,y+h-r,'Q',x+w,y+h,x+w-r,y+h,'L',x+r,y+h,'Q',x,y+h,x,y+h-r,'L',x,y+r,'Q',x,y,x+r,y,'Z']);
+}
+export const claude:Shape={name:'claude',core:.84,body:(_t,b)=>{b.n=12;b.rot=0},face:b=>({cx:b.cx,cy:b.cy-b.ry*.28,rx:b.rx*.7,ry:b.ry*.36}),path:b=>rectPart(b,-.85,-.72,1.7,1.15,.025),decorate:(_t,b,out)=>{
+ out.extra.push(rectPart(b,-1.25,-.32,.48,.4,.02),rectPart(b,.77,-.32,.48,.4,.02));
+ for(const x of [-.85,-.44,.18,.59])out.extra.push(rectPart(b,x,.35,.23,.55,.018));
+}};
+export const codex:Shape={name:'codex',core:.82,body:(_t,b)=>{b.n=4;b.rot=0;b.cy-=b.ry*.12},face:b=>({cx:b.cx,cy:b.cy-b.ry*.14,rx:b.rx*.68,ry:b.ry*.36}),path:b=>rectPart(b,-1,-.86,2,1.35,.32),decorate:(_t,b,out)=>{
+ out.extra.push(rectPart(b,-.52,.43,1.04,.6,.15),rectPart(b,-.84,.53,.27,.55,.13),rectPart(b,.57,.53,.27,.55,.13),rectPart(b,-.46,.94,.34,.37,.075),rectPart(b,.12,.94,.34,.37,.075));
+}};

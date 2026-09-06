@@ -14,6 +14,6 @@ export default defineConfig({
   build: { outDir: '../web-dist', emptyOutDir: true, target: 'es2022' },
   server: {
     host: '127.0.0.1',
-    proxy: Object.fromEntries(['/api', '/preview.js', '/geometry.js', '/motion.js', '/animation-export.js', '/fonts', '/vendor', '/renders'].map(path => [path, 'http://127.0.0.1:8879'])),
+    proxy: Object.fromEntries(['/api', '/preview.js', '/fur-eyes.js', '/geometry.js', '/motion.js', '/animation-export.js', '/fonts', '/vendor', '/renders'].map(path => [path, 'http://127.0.0.1:8879'])),
   },
 })

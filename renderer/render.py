@@ -147,8 +147,20 @@ def mesh(name,verts,faces,mat):
     for p in me.polygons:p.use_smooth=True
     return ob
 
-def inflate(polys,cx,cy,depth,mat):
+def inflate(polys,cx,cy,depth,mat,flat=False):
     n=256;m=80;rs=[max(radial(p,cx,cy,TAU*i/n) for p in polys) for i in range(n)]
+    if flat:
+        bevel=min(.05,depth*.4);verts=[(0,-depth,0)];faces=[]
+        for inset,y in [(bevel,-depth),(0,-depth+bevel),(0,depth-bevel),(bevel,depth)]:
+            for i in range(n):
+                angle=TAU*i/n;r=max(.001,rs[i]-inset);verts.append((r*math.cos(angle),y,r*math.sin(angle)))
+        for i in range(n):faces.append((0,1+(i+1)%n,1+i))
+        for j in range(3):
+            for i in range(n):
+                a=1+j*n+i;b=1+j*n+(i+1)%n;faces.append((a,b,b+n,a+n))
+        cap=len(verts);verts.append((0,depth,0))
+        for i in range(n):faces.append((cap,1+3*n+i,1+3*n+(i+1)%n))
+        return mesh('Character • bevelled body',verts,faces,mat),rs
     # Latitude rings produce a smooth inflated front and back with the exact sampled silhouette at the equator.
     pole_radius=min(sum(rs)/n,min(rs)*1.30)
     verts=[(0,-depth,0)];faces=[]
@@ -168,7 +180,7 @@ def inflate(polys,cx,cy,depth,mat):
     bpy.context.view_layer.objects.active=ob;ob.select_set(True);bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT');bpy.ops.mesh.normals_make_consistent(inside=False);bpy.ops.object.mode_set(mode='OBJECT');ob.select_set(False)
     return ob,rs
 
-def eye_mesh(mark,cx,cy,rs,depth,mat,index):
+def eye_mesh(mark,cx,cy,rs,depth,mat,index,flat=False):
     p=path_points(mark.get('d',mark.get('path','')),12);n=len(p)
     ecx=sum(x for x,z in p)/n;ecy=sum(z for x,z in p)/n
     verts=[];faces=[]
@@ -183,7 +195,7 @@ def eye_mesh(mark,cx,cy,rs,depth,mat,index):
                 mid=(loq+hiq)/2
                 if mid*(avg+(r-avg)*mid**3)<target:loq=mid
                 else:hiq=mid
-            q=min(.999,(loq+hiq)/2);y=-depth*math.sqrt(max(.001,1-q*q))-.009-bump
+            q=min(.999,(loq+hiq)/2);y=(-depth if flat else -depth*math.sqrt(max(.001,1-q*q)))-.009-bump
             verts.append((x,y,z))
     for j in range(5):
         for i in range(n):faces.append((j*n+i,j*n+(i+1)%n,(j+1)*n+(i+1)%n,(j+1)*n+i))
@@ -226,23 +238,43 @@ def main():
     args=sys.argv[sys.argv.index('--')+1:];src=Path(args[0]);out=Path(args[1]);scene=json.loads(src.read_text());opts=scene.get('render',scene.get('config',{}).get('render',{}));studio='--studio' in args;transparent=opts.get('transparent',True) and not studio
     bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
     polys,eyes=contours(scene);layout=scene.get('layout',{});body=layout.get('body',scene.get('body',{}));cx=body.get('cx',50);cy=body.get('cy',50)
-    composite=False
+    flat=scene.get('shape') in ('claude','codex');composite=False
     try:assert_star_union(polys,cx,cy)
     except ValueError:composite=True
     colors=scene.get('colors',{});head=scene.get('marks',[{}])[0].get('fill',colors.get('head','#36cfd9'));eye=eyes[0].get('fill',colors.get('eye','#091819'))
-    depth=float(opts.get('depth',.95*min(body.get('rx',32),body.get('ry',32))/32));rough=float(opts.get('roughness',.22));mopts=scene.get('material',scene.get('config',{}).get('material',{}));mat=finish_material(material('Body • '+mopts.get('preset','resin'),head,rough),mopts);ob,rs=inflate(polys[-1:] if composite else polys,cx,cy,depth,mat)
+    depth=float(opts.get('depth',.95*min(body.get('rx',32),body.get('ry',32))/32));rough=float(opts.get('roughness',.22));mopts=scene.get('material',scene.get('config',{}).get('material',{}));mat=finish_material(material('Body • '+mopts.get('preset','resin'),head,rough),mopts);ob,rs=inflate(polys[-1:] if composite else polys,cx,cy,depth,mat,flat)
     if composite:
         for p in polys[:-1]:
             px=sum(x for x,y in p)/len(p);py=sum(y for x,y in p)/len(p)
             pd=min(depth,.95*min(max(x for x,y in p)-min(x for x,y in p),max(y for x,y in p)-min(y for x,y in p))/64)
-            part,_=inflate([p],px,py,pd,mat)
+            part,_=inflate([p],px,py,pd,mat,flat)
             if mopts.get('preset')=='fur':fur_mesh(part,[],px,py,mat,mopts)
             part.location.x+=(px-cx)/32;part.location.z+=(cy-py)/32
-    if mopts.get('preset')=='fur':fur_mesh(ob,eyes,cx,cy,mat,mopts)
-    emat=finish_material(material('Eyes • '+mopts.get('preset','resin'),eye,rough),mopts)
-    for i,e in enumerate(eyes+scene.get('brows',[])):
-        eye_ob=eye_mesh(e,cx,cy,rs,depth,emat,i)
-        if mopts.get('preset')=='fur':eye_fur_mesh(eye_ob,emat,mopts,i)
+    if mopts.get('preset')=='fur':
+        fur_mesh(ob,[],cx,cy,mat,mopts)
+        base=scene['motion']['baseLayout'];pose=scene['motion']['pose'];gap=abs(base['eyes'][1]['cx']-base['eyes'][0]['cx'])/32
+        radius=max(.055,min(.21,gap*.32,base['face']['ry']/32*.6));black=material('Fur • round black eyes','#101419',.32)
+        for i,e in enumerate(base['eyes']):
+            x=(e['cx']+pose['edx']*(1 if i else -1)-cx)/32;z=(cy-e['cy']-pose['edy']-i*pose['edy2'])/32
+            angle=math.atan2(z,x)%TAU;k=angle/TAU*len(rs);lo=int(k);r=rs[lo]*(1-k+lo)+rs[(lo+1)%len(rs)]*(k-lo);pole=min(sum(rs)/len(rs),min(rs)*1.3);a=0.;b=1.
+            for _ in range(20):
+                q=(a+b)/2
+                if q*(pole+(r-pole)*q**3)<math.hypot(x,z):a=q
+                else:b=q
+            surface=depth if flat else depth*math.sqrt(max(.001,1-min(.999,(a+b)/2)**2))
+            bpy.ops.mesh.primitive_uv_sphere_add(segments=32,ring_count=24,radius=radius,location=(x,-surface-mopts.get('furLength',.22)*.95-.025,z))
+            eye_ob=bpy.context.object;eye_ob.name='Fur • round eye';eye_ob.scale=(max(.65,min(1.15,pose['esx']+i*pose['esx2'])),.68,max(.045,min(1,pose['esy']+i*pose['esy2'])))
+            eye_ob.rotation_euler.y=(pose['tilt']+i*pose['tilt2'])*(1 if i else -1)*math.pi/180;eye_ob.data.materials.append(black)
+            for polygon in eye_ob.data.polygons:polygon.use_smooth=True
+    else:
+        plate=scene.get('facePlate')
+        if plate:eye_mesh(plate,cx,cy,rs,depth+.035,material('Codex • screen',plate['fill'],.65),-1,True)
+        emat=finish_material(material('Eyes • '+mopts.get('preset','resin'),eye,rough),mopts)
+        for i,e in enumerate(eyes+scene.get('brows',[])):
+            if plate:
+                points=path_points(e['d']);eye_mesh_flat=mesh('Codex • terminal eye',[((x-cx)/32,-depth-.1,(cy-y)/32) for x,y in points],[tuple(range(len(points)))],emat)
+                solid=eye_mesh_flat.modifiers.new('Terminal depth','SOLIDIFY');solid.thickness=.012
+            else:eye_mesh(e,cx,cy,rs,depth,emat,i,flat)
     # Preserve source canvas placement and baked expression body wrapper translation.
     wrap=scene.get('transform','');dy=0
     match=re.search(r'translate\(\s*0[ ,]+([-\d.]+)\s*\)',wrap)

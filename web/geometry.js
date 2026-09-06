@@ -22,14 +22,18 @@ export function resolveGeometry(scene,n=160){
  const polys=scene.marks.slice(0,-2).map(m=>m.kind==='circle'?Array.from({length:160},(_,i)=>[m.cx+m.r*Math.cos(TAU*i/160),m.cy+m.r*Math.sin(TAU*i/160)]):pathPoints(m.d));
  const {cx,cy}=scene.layout.body,depth=scene.render?.depth??(.95*Math.min(scene.layout.body.rx,scene.layout.body.ry)/32);
  function component(ps,x,y,d){const rs=[];for(let i=0;i<n;i++){const intervals=ps.flatMap(p=>rayIntervals(p,x,y,TAU*i/n)).sort((a,b)=>a[0]-b[0]);let reach=0;for(const [a,b]of intervals){if(a>reach+1e-5)return null;reach=Math.max(reach,b)}if(!reach)return null;rs.push(reach/32)}const mean=rs.reduce((a,b)=>a+b,0)/n;return {polys:ps,cx:x,cy:y,rs,pole:Math.min(mean,Math.min(...rs)*1.3),depth:d}}
- const joined=component(polys,cx,cy,depth);if(joined)return joined;
+ const flat=['claude','codex'].includes(scene.shape);
+ const joined=component(polys,cx,cy,depth);if(joined)joined.flat=flat;if(joined)return joined;
  // Composite source marks may contain genuine gaps. Preserve each mark instead
  // of bridging empty SVG space with an invented radial envelope.
- const ordered=[polys.at(-1),...polys.slice(0,-1)];const parts=ordered.map((p,i)=>{const x=i?p.reduce((v,q)=>v+q[0],0)/p.length:cx,y=i?p.reduce((v,q)=>v+q[1],0)/p.length:cy;const radius=Math.min(Math.max(...p.map(q=>q[0]))-Math.min(...p.map(q=>q[0])),Math.max(...p.map(q=>q[1]))-Math.min(...p.map(q=>q[1])))/64;const g=component([p],x,y,i?Math.min(depth,radius*.95):depth);if(!g)throw new Error('Unsupported non-radial individual source mark');return g});return {...parts[0],polys,parts};
+ const ordered=[polys.at(-1),...polys.slice(0,-1)];const parts=ordered.map((p,i)=>{const x=i?p.reduce((v,q)=>v+q[0],0)/p.length:cx,y=i?p.reduce((v,q)=>v+q[1],0)/p.length:cy;const radius=Math.min(Math.max(...p.map(q=>q[0]))-Math.min(...p.map(q=>q[0])),Math.max(...p.map(q=>q[1]))-Math.min(...p.map(q=>q[1])))/64;const g=component([p],x,y,i?Math.min(depth,radius*.95):depth);if(!g)throw new Error('Unsupported non-radial individual source mark');g.flat=flat;return g});return {...parts[0],polys,parts};
 }
 
-export function surfaceDepth(x,y,g){let k=(Math.atan2(y,x)+TAU)%TAU/TAU*g.rs.length,lo=Math.floor(k);const r=g.rs[lo]*(1-k+lo)+g.rs[(lo+1)%g.rs.length]*(k-lo),target=Math.hypot(x,y);let a=0,b=1;for(let i=0;i<20;i++){const mid=(a+b)/2;if(mid*(g.pole+(r-g.pole)*mid**3)<target)a=mid;else b=mid}const q=Math.min(.999,(a+b)/2);return g.depth*Math.sqrt(Math.max(.001,1-q*q));}
+export function surfaceDepth(x,y,g){if(g.flat)return g.depth;let k=(Math.atan2(y,x)+TAU)%TAU/TAU*g.rs.length,lo=Math.floor(k);const r=g.rs[lo]*(1-k+lo)+g.rs[(lo+1)%g.rs.length]*(k-lo),target=Math.hypot(x,y);let a=0,b=1;for(let i=0;i<20;i++){const mid=(a+b)/2;if(mid*(g.pole+(r-g.pole)*mid**3)<target)a=mid;else b=mid}const q=Math.min(.999,(a+b)/2);return g.depth*Math.sqrt(Math.max(.001,1-q*q));}
 export function bodyMeshData(g,m=48){if(g.parts){const vertices=[],indices=[];for(const part of g.parts){const data=bodyMeshData(part,m),offset=vertices.length/3;for(let i=0;i<data.vertices.length;i+=3)vertices.push(data.vertices[i]+(part.cx-g.cx)/32,data.vertices[i+1]+(g.cy-part.cy)/32,data.vertices[i+2]);indices.push(...data.indices.map(i=>i+offset))}return {vertices,indices}}const {rs,pole,depth}=g,n=rs.length,vertices=[0,0,depth],indices=[];
+ if(g.flat){const bevel=Math.min(.05,depth*.4);for(const [inset,z] of [[bevel,depth],[0,depth-bevel],[0,-depth+bevel],[bevel,-depth]])for(let i=0;i<n;i++){const a=TAU*i/n,r=Math.max(.001,rs[i]-inset);vertices.push(r*Math.cos(a),r*Math.sin(a),z)}
+ for(let i=0;i<n;i++)indices.push(0,1+i,1+(i+1)%n);for(let j=0;j<3;j++)for(let i=0;i<n;i++){const a=1+j*n+i,b=1+j*n+(i+1)%n;indices.push(a,a+n,b,b,a+n,b+n)}const cap=vertices.length/3;vertices.push(0,0,-depth);for(let i=0;i<n;i++)indices.push(cap,1+3*n+(i+1)%n,1+3*n+i);return {vertices,indices};}
+
  for(let j=1;j<m;j++){const lat=Math.PI*j/m,s=Math.sin(lat),z=depth*Math.cos(lat);for(let i=0;i<n;i++){const a=TAU*i/n,r=s*(pole+(rs[i]-pole)*s**3);vertices.push(r*Math.cos(a),r*Math.sin(a),z)}}const back=vertices.length/3;vertices.push(0,0,-depth);
  for(let i=0;i<n;i++)indices.push(0,1+i,1+(i+1)%n);
  for(let j=0;j<m-2;j++)for(let i=0;i<n;i++){const a=1+j*n+i,b=1+j*n+(i+1)%n;indices.push(a,a+n,b+n,a,b+n,b)}

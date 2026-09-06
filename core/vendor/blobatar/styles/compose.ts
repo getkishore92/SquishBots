@@ -63,6 +63,13 @@ export const faceFit: Fit = (t, b, face) => {
 /** `[shape, upper edge of its band in [0, 1)]`, in order. */
 export type Band = readonly [Shape, number];
 
+function characterEye(shape:string,e:Eye,index:number):string {
+ if(shape!=='codex')return superellipse(e);
+ const points=index?[[-1.35,.48],[1.35,.48],[1.35,.92],[-1.35,.92]]:[[-1,-1],[1,0],[-1,1],[-1,.45],[.05,0],[-1,-.45]];
+ const angle=e.rot*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
+ return points.map(([x,y],i)=>`${i?'L':'M'} ${(e.cx+c*x*e.rx-s*y*e.ry).toFixed(3)} ${(e.cy+s*x*e.rx+c*y*e.ry).toFixed(3)}`).join(' ')+' Z';
+}
+
 export function compose(bands: Band[], fit: Fit) {
   const pick = (v: number) => (bands.find(([, upTo]) => v < upTo) ?? bands[bands.length - 1]!)[0];
 
@@ -93,14 +100,14 @@ export function compose(bands: Band[], fit: Fit) {
       body, face,
       petals: deco.petals,
       extra: deco.extra,
-      eyes: fit(t, body, face),
+      eyes: fit(t, body, face).map(e=>shape.name==='claude'?{...e,ry:e.ry*.4,n:10,rot:0}:e),
     };
   }
 
   function render(l: ReturnType<typeof layout>, p: Palette, mo?: boolean): string {
     const r2 = (v: number) => Math.round(v * 100) / 100;
     const eye = (e: Eye, i: number) => {
-      const path = `<path d="${superellipse(e)}"/>`;
+      const path = `<path d="${characterEye(l.shape,e,i)}"/>`;
       return mo
         ? `<g class="mo-eye" style="--mo-wrap:${i ? 1 : -1};--mo-lean:${r2(e.rot)};transform-origin:${r2(e.cx)}px ${r2(e.cy)}px">${path}</g>`
         : path;
@@ -167,7 +174,7 @@ export function marks(l: Layout, p: Palette): Mark[] {
     ...l.petals.map((d): Mark => ({ kind: "circle", cx: r2(d.cx), cy: r2(d.cy), r: r2(d.r), fill: head })),
     ...l.extra.map((d): Mark => ({ kind: "path", d, fill: head })),
     { kind: "path", d: l.draw ? l.draw(l.body) : superellipse(l.body), fill: head },
-    ...l.eyes.map((e): Mark => ({ kind: "path", d: superellipse(e), fill: p.eye! })),
+    ...l.eyes.map((e,i): Mark => ({ kind: "path", d: characterEye(l.shape,e,i), fill: p.eye! })),
   ];
 }
 

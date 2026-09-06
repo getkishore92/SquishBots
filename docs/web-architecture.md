@@ -1,6 +1,6 @@
 # Application architecture
 
-SquishBots has one configuration resolver, a React configurator, a Three.js preview and a local headless Blender render queue. The resolver vendors Blobatar 2.7.0 at commit `ebb7ea4808b1263629fc8fa65e2398b9cbdb6f6b`; upstream trait and motion semantics remain separate from the 3D material and interaction extensions. Local shape additions are in `core/vendor/blobatar/styles/shapes.ts`, with selection bands in `styles/blob.ts`. The pinned commit identifies the upstream baseline; these files contain documented local changes. The current shape catalog has eleven families: nine retained source families plus Ghost and Monster. Sun and its four trait controls are removed.
+SquishBots has one configuration resolver, a React configurator, a Three.js preview and a local headless Blender render queue. The resolver vendors Blobatar 2.7.0 at commit `ebb7ea4808b1263629fc8fa65e2398b9cbdb6f6b`; upstream trait and motion semantics remain separate from the 3D material and interaction extensions. Local shape additions are in `core/vendor/blobatar/styles/shapes.ts`, with selection bands in `styles/blob.ts`. The pinned commit identifies the upstream baseline; these files contain documented local changes. The current shape catalog has thirteen families, including Ghost, Monster, Claude and Codex. Sun and its four trait controls are removed.
 
 ## Configuration
 
@@ -61,3 +61,5 @@ The server binds to 127.0.0.1 and is intended for local use. A public multi-user
 `npm test` checks source geometry, sparse traits, narrowing, expressions, motion math, hashing, material bounds and eye contrast. `npm run typecheck` and `npm run build` check the frontend. `npm run test:api` performs API checks and a real Blender render. Browser interaction and visual review remain separate from these code checks.
 
 Fur uses dense, tapered strand ribbons in the browser, with root-to-tip shading and downward combing. Blender uses tapered curves with the same longer, curved grooming direction. New sessions start in Play mode. Press R outside text fields and popups to shuffle all unlocked settings.
+
+Claude and Codex use shallow bevelled component meshes, preserving separate arms and feet. Codex has a raised dark screen with terminal-shaped eyes. Fur uses raised round black eyes; the coat is continuous behind them and eye squashing preserves blinks and expressions. `web/fur-eyes.js` is bundled into hosted deployments alongside the preview module.

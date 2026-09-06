@@ -442,6 +442,12 @@ var faceFit = (t, b, face) => {
     }
   ];
 };
+function characterEye(shape, e, index) {
+  if (shape !== "codex") return superellipse(e);
+  const points = index ? [[-1.35, 0.48], [1.35, 0.48], [1.35, 0.92], [-1.35, 0.92]] : [[-1, -1], [1, 0], [-1, 1], [-1, 0.45], [0.05, 0], [-1, -0.45]];
+  const angle = e.rot * Math.PI / 180, c = Math.cos(angle), s = Math.sin(angle);
+  return points.map(([x, y], i) => `${i ? "L" : "M"} ${(e.cx + c * x * e.rx - s * y * e.ry).toFixed(3)} ${(e.cy + s * x * e.rx + c * y * e.ry).toFixed(3)}`).join(" ") + " Z";
+}
 function compose(bands, fit) {
   const pick = (v) => (bands.find(([, upTo]) => v < upTo) ?? bands[bands.length - 1])[0];
   function layout(t) {
@@ -467,13 +473,13 @@ function compose(bands, fit) {
       face,
       petals: deco.petals,
       extra: deco.extra,
-      eyes: fit(t, body, face)
+      eyes: fit(t, body, face).map((e) => shape.name === "claude" ? { ...e, ry: e.ry * 0.4, n: 10, rot: 0 } : e)
     };
   }
   function render(l, p, mo) {
     const r22 = (v) => Math.round(v * 100) / 100;
     const eye = (e, i) => {
-      const path = `<path d="${superellipse(e)}"/>`;
+      const path = `<path d="${characterEye(l.shape, e, i)}"/>`;
       return mo ? `<g class="mo-eye" style="--mo-wrap:${i ? 1 : -1};--mo-lean:${r22(e.rot)};transform-origin:${r22(e.cx)}px ${r22(e.cy)}px">${path}</g>` : path;
     };
     const body = `<g fill="${p.head}">` + l.petals.map((d) => `<circle cx="${r22(d.cx)}" cy="${r22(d.cy)}" r="${r22(d.r)}"/>`).join("") + l.extra.map((d) => `<path d="${d}"/>`).join("") + `<path d="${l.draw ? l.draw(l.body) : superellipse(l.body)}"/></g><g fill="${p.eye}"${mo ? ` class="mo-eyes"` : ""}>` + l.eyes.map(eye).join("") + `</g>`;
@@ -488,7 +494,7 @@ function marks(l, p) {
     ...l.petals.map((d) => ({ kind: "circle", cx: r22(d.cx), cy: r22(d.cy), r: r22(d.r), fill: head })),
     ...l.extra.map((d) => ({ kind: "path", d, fill: head })),
     { kind: "path", d: l.draw ? l.draw(l.body) : superellipse(l.body), fill: head },
-    ...l.eyes.map((e) => ({ kind: "path", d: superellipse(e), fill: p.eye }))
+    ...l.eyes.map((e, i) => ({ kind: "path", d: characterEye(l.shape, e, i), fill: p.eye }))
   ];
 }
 
@@ -547,20 +553,74 @@ var nub = {
 };
 var cloud = {
   name: "cloud",
-  core: 0.78,
-  face: splineFace,
-  path: spline,
-  decorate: (t, b, out) => {
-    const count = t.int("cloud.n", 4, 6);
-    for (let i = 0; i < count; i++) {
-      const a = Math.PI + Math.PI * (i + 0.5) / count;
-      out.petals.push({
-        cx: b.cx + Math.cos(a) * b.rx * 0.8,
-        cy: b.cy + Math.sin(a) * b.rx * 0.5,
-        r: b.rx * t.num(`cloud.r${i}`, 0.44, 0.62)
-      });
-    }
-  }
+  core: 0.88,
+  face: shrunk(0.68),
+  body: (_t, b) => {
+    b.n = 2;
+    b.rot = 0;
+  },
+  path: (b) => localPath(b, [
+    "M",
+    -0.33,
+    -0.73,
+    "C",
+    -0.23,
+    -1.12,
+    0.25,
+    -1.12,
+    0.36,
+    -0.76,
+    "C",
+    0.68,
+    -0.91,
+    0.94,
+    -0.63,
+    0.88,
+    -0.35,
+    "C",
+    1.23,
+    -0.2,
+    1.19,
+    0.33,
+    0.8,
+    0.38,
+    "C",
+    0.79,
+    0.75,
+    0.49,
+    0.91,
+    0.24,
+    0.75,
+    "C",
+    0.06,
+    1,
+    -0.26,
+    0.99,
+    -0.43,
+    0.77,
+    "C",
+    -0.73,
+    0.94,
+    -1,
+    0.72,
+    -0.99,
+    0.44,
+    "C",
+    -1.35,
+    0.33,
+    -1.32,
+    -0.18,
+    -1,
+    -0.31,
+    "C",
+    -1.03,
+    -0.68,
+    -0.69,
+    -0.94,
+    -0.33,
+    -0.73,
+    "Z"
+  ])
 };
 var droplet = {
   name: "droplet",
@@ -675,6 +735,23 @@ var triangle = {
   },
   face: (b) => ({ cx: b.cx, cy: b.cy + b.ry * 0.1, rx: b.rx * 0.54, ry: b.ry * 0.36 })
 };
+function rectPart(b, x, y, w, h, r = 0.055) {
+  return localPath(b, ["M", x + r, y, "L", x + w - r, y, "Q", x + w, y, x + w, y + r, "L", x + w, y + h - r, "Q", x + w, y + h, x + w - r, y + h, "L", x + r, y + h, "Q", x, y + h, x, y + h - r, "L", x, y + r, "Q", x, y, x + r, y, "Z"]);
+}
+var claude = { name: "claude", core: 0.84, body: (_t, b) => {
+  b.n = 12;
+  b.rot = 0;
+}, face: (b) => ({ cx: b.cx, cy: b.cy - b.ry * 0.28, rx: b.rx * 0.7, ry: b.ry * 0.36 }), path: (b) => rectPart(b, -0.85, -0.72, 1.7, 1.15, 0.025), decorate: (_t, b, out) => {
+  out.extra.push(rectPart(b, -1.25, -0.32, 0.48, 0.4, 0.02), rectPart(b, 0.77, -0.32, 0.48, 0.4, 0.02));
+  for (const x of [-0.85, -0.44, 0.18, 0.59]) out.extra.push(rectPart(b, x, 0.35, 0.23, 0.55, 0.018));
+} };
+var codex = { name: "codex", core: 0.82, body: (_t, b) => {
+  b.n = 4;
+  b.rot = 0;
+  b.cy -= b.ry * 0.12;
+}, face: (b) => ({ cx: b.cx, cy: b.cy - b.ry * 0.14, rx: b.rx * 0.68, ry: b.ry * 0.36 }), path: (b) => rectPart(b, -1, -0.86, 2, 1.35, 0.32), decorate: (_t, b, out) => {
+  out.extra.push(rectPart(b, -0.52, 0.43, 1.04, 0.6, 0.15), rectPart(b, -0.84, 0.53, 0.27, 0.55, 0.13), rectPart(b, 0.57, 0.53, 0.27, 0.55, 0.13), rectPart(b, -0.46, 0.94, 0.34, 0.37, 0.075), rectPart(b, 0.12, 0.94, 0.34, 0.37, 0.075));
+} };
 
 // core/vendor/blobatar/styles/blob.ts
 var BANDS = [
@@ -688,7 +765,9 @@ var BANDS = [
   [hexagon, 0.95],
   [ghost, 0.97],
   [monster, 0.985],
-  [triangle, 1]
+  [triangle, 0.996],
+  [claude, 0.998],
+  [codex, 1]
 ];
 var style = compose(BANDS, faceFit);
 
@@ -1095,7 +1174,7 @@ var SOURCE = { version: "2.7.0", commit: "ebb7ea4808b1263629fc8fa65e2398b9cbdb6f
 var MATERIAL_DEFAULTS = {
   resin: { preset: "resin", roughness: 0.22, textureScale: 24, textureStrength: 0 },
   clay: { preset: "clay", roughness: 0.78, textureScale: 35, textureStrength: 0.045 },
-  fur: { preset: "fur", roughness: 0.75, textureScale: 30, textureStrength: 0.1, furLength: 0.075, furDensity: 12e3 },
+  fur: { preset: "fur", roughness: 0.75, textureScale: 30, textureStrength: 0.1, furLength: 0.22, furDensity: 28e3 },
   glass: { preset: "glass", roughness: 0.06, textureScale: 24, textureStrength: 0 }
 };
 var MATERIAL_PRESETS = Object.keys(MATERIAL_DEFAULTS);
@@ -1120,7 +1199,7 @@ function validateConfig(input) {
   }
   for (const k of ["hue", "tone"]) if (o[k] !== void 0) assert(finite(o[k]), `${k} must be finite`);
   for (const k of ["normalize", "contrast"]) if (o[k] !== void 0) assert(typeof o[k] === "boolean", `${k} must be boolean`);
-  if (o.background !== void 0) assert([true, false, "square", "circle", "squircle"].includes(o.background), "Invalid background");
+  if (o.background !== void 0) o.background = false;
   if (o.palette !== void 0) {
     assert(object(o.palette), "palette must be an object");
     for (const [k, v] of Object.entries(o.palette)) assert(["head", "eye", "bg"].includes(k) && typeof v === "string" && /^#[\da-f]{6}$/i.test(v), "Palette colors must be six-digit hex for Blender");
@@ -1157,6 +1236,14 @@ function canonical(value) {
   if (object(value)) return "{" + Object.keys(value).sort().map((k) => JSON.stringify(k) + ":" + canonical(value[k])).join(",") + "}";
   return JSON.stringify(value);
 }
+var happyExpression = { ...happy, p: { ...happy.p, esx: 0.95, esy: 0.85, esx2: 0, esy2: 0, tilt: 0, tilt2: 0 } };
+function expressionBrows(layout, expression) {
+  return layout.eyes.map((eye, i) => {
+    const side = i ? 1 : -1, w = Math.max(2.8, eye.rx * 1.15), x = eye.cx, y = eye.cy - eye.ry - (expression === "wink" && !i ? 5 : 4), arch = expression === "wink" ? i ? 1.8 : 4 : 3;
+    const left = y - side * 0.7, right = y + side * 0.7;
+    return { kind: "path", fill: layout.palette.eye, d: `M ${x - w} ${left} Q ${x} ${y - arch} ${x + w} ${right} Q ${x + w + 0.5} ${right + 1.2} ${x + w - 0.5} ${right + 1.4} Q ${x} ${y - arch + 2.3} ${x - w + 0.5} ${left + 1.4} Q ${x - w - 0.5} ${left + 1.2} ${x - w} ${left} Z` };
+  });
+}
 function renderOptions(config) {
   const options = config.options;
   let palette2 = options.palette;
@@ -1172,7 +1259,12 @@ function renderOptions(config) {
     };
     palette2 = { ...palette2, eye: contrast2(softWhite) > contrast2(dark) ? softWhite : dark };
   }
-  return { ...options, ...palette2 ? { palette: palette2 } : {}, expression: expression_exports[options.expression ?? "idle"] };
+  if (!options.palette?.eye && _layout(config.seed, { ...options, expression: idle }).shape === "codex") palette2 = { ...palette2, eye: "#a7f4ff" };
+  return { ...options, ...palette2 ? { palette: palette2 } : {}, expression: options.expression === "happy" ? happyExpression : expression_exports[options.expression ?? "idle"] };
+}
+function screenPath(b) {
+  const x = b.cx - b.rx * 0.77, y = b.cy - b.ry * 0.57, w = b.rx * 1.54, h = b.ry * 0.84, r = b.rx * 0.14;
+  return `M ${x + r} ${y} L ${x + w - r} ${y} Q ${x + w} ${y} ${x + w} ${y + r} L ${x + w} ${y + h - r} Q ${x + w} ${y + h} ${x + w - r} ${y + h} L ${x + r} ${y + h} Q ${x} ${y + h} ${x} ${y + h - r} L ${x} ${y + r} Q ${x} ${y} ${x + r} ${y} Z`;
 }
 function resolveConfig(input) {
   const config = validateConfig(input), opts = renderOptions(config);
@@ -1194,6 +1286,8 @@ function resolveConfig(input) {
     bg,
     layout,
     motion,
+    brows: ["happy", "wink"].includes(config.options.expression) ? expressionBrows(layout, config.options.expression) : [],
+    facePlate: layout.shape === "codex" ? { kind: "path", fill: "#102137", d: screenPath(layout.body) } : null,
     bodyPaths: body.filter((m) => m.kind === "path").map((m) => m.d),
     bodyCircles: body.filter((m) => m.kind === "circle"),
     eyes,
@@ -1201,7 +1295,7 @@ function resolveConfig(input) {
     status: config.status ?? "none",
     badge: config.badge ?? 0,
     material: config.material,
-    render: { ...config.render, depth: config.render.depth ?? 0.95 * Math.min(layout.body.rx, layout.body.ry) / 32 }
+    render: { ...config.render, depth: config.render.depth ?? (["claude", "codex"].includes(layout.shape) ? 0.2 : 0.95 * Math.min(layout.body.rx, layout.body.ry) / 32) }
   };
 }
 function referenceSvg(config) {
@@ -1219,7 +1313,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
 }
 
 // core/catalog.mjs
-var shapeRows = [["round", 0.11], ["organic", 0.35], ["boxy", 0.54], ["capsule", 0.65], ["nub", 0.745], ["cloud", 0.825], ["droplet", 0.888], ["hexagon", 0.933], ["ghost", 0.96], ["monster", 0.978], ["triangle", 0.995]];
+var shapeRows = [["round", 0.11], ["organic", 0.35], ["boxy", 0.54], ["capsule", 0.65], ["nub", 0.745], ["cloud", 0.825], ["droplet", 0.888], ["hexagon", 0.933], ["ghost", 0.96], ["monster", 0.978], ["triangle", 0.995], ["claude", 0.997], ["codex", 0.999]];
 var toneRows = [["pastel", 0.1], ["pale", 0.28], ["mid", 0.49], ["deep", 0.71], ["bright", 0.865], ["ink", 0.965]];
 var choice = ([id, value]) => ({ id, label: id, value, name: id, at: value });
 var control = (key, label2, group, kind = "slider", when, bands) => ({ key, label: label2, group, kind, ...when ? { when } : {}, ...bands ? { bands } : {} });
@@ -1238,7 +1332,6 @@ var controls = [
   control("gaze.y", "Gaze y", "eyes"),
   control("tone", "Tone", "color", "tone"),
   control("hue", "Hue", "color"),
-  control("cloud.n", "Lobes", "decoration", "slider", ["cloud"], 3),
   control("nub.n", "Nubs", "decoration", "slider", ["nub"], 2),
   control("nub.a0", "Nub angle", "decoration", "slider", ["nub"]),
   control("nub.r0", "Nub size", "decoration", "slider", ["nub"]),
@@ -1269,8 +1362,6 @@ var allKeys = [
   "eye.lean",
   "eye.lean2",
   "eye.dy",
-  "cloud.n",
-  ...Array.from({ length: 6 }, (_, i) => `cloud.r${i}`),
   "nub.n",
   "nub.a0",
   "nub.a1",
@@ -1283,8 +1374,7 @@ var allKeys = [
 var curated = new Set(controls.map((c) => c.key));
 var advancedControls = allKeys.filter((key) => !curated.has(key)).map((key) => {
   let when;
-  if (/^body\.(pts|r\d)$/.test(key)) when = ["organic", "cloud"];
-  if (key.startsWith("cloud.")) when = ["cloud"];
+  if (/^body\.(pts|r\d)$/.test(key)) when = ["organic"];
   if (key.startsWith("nub.")) when = ["nub"];
   return control(key, key, "advanced", "slider", when, key === "body.pts" ? 3 : void 0);
 });
@@ -1302,7 +1392,6 @@ var CATALOG = {
   advancedControls,
   expressions: [...EXPRESSION_NAMES],
   traitPosition: { min: 0, max: 0.999, step: 1e-3 },
-  background: [false, "square", "circle", "squircle"],
   statuses: ["none", "online", "away", "offline", "thinking"]
 };
 function getTraitValues(input) {

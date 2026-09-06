@@ -1,6 +1,6 @@
 # Blobatar reference audit
 
-This document records the original upstream project. The current SquishBots catalog differs by request: Sun and its four traits are removed, Ghost and Monster are added, leaving eleven shape families and 44 exposed traits. See the root README for current product behavior.
+This document records the original upstream project. The current SquishBots catalog differs by request: Sun and its four traits are removed, Ghost, Monster, Claude and Codex are added, giving thirteen shape families. See the root README for current product behavior.
 Audited 2026-09-06 against [Alain00/blobatar](https://github.com/Alain00/blobatar), commit `ebb7ea4808b1263629fc8fa65e2398b9cbdb6f6b`, package version **2.7.0**. Source paths below are relative to that repository. The checked-out source is the authority; older ADRs still describe six shapes or a removed character variant.
 
 ## Functional contract

@@ -44,10 +44,12 @@ Status spheres, unread badges, thinking dots and source background shapes are se
 
 Radial inflation checks whether the source union is star-shaped around its center. When a composite outline has unsupported gaps, the renderer inflates source parts separately around their own centers. This preserves gaps instead of filling them, but overlapping parts can show seams.
 
-The current catalog has eleven shape families. Ghost and Monster are SquishBots additions built from continuous source paths with the original eye and expression model. Sun is omitted from the catalog and automatic shape selection.
+The current catalog has thirteen shape families. Ghost and Monster are SquishBots additions built from continuous source paths with the original eye and expression model. Sun is omitted from the catalog and automatic shape selection.
 
 ## Reproducibility
 
 The resolver produces deterministic geometry and a configuration hash. Scene construction and strand placement use deterministic sampling. Render metadata records the Blender version, engine, render seed, configuration hash, material settings and image dimensions.
 
 Use the same Blender version, device and settings when comparing repeat renders. PNG byte hashes can differ because of embedded metadata; compare decoded pixels when checking image identity. Cross-version and cross-device pixel identity is not guaranteed.
+
+Claude and Codex use shallow bevelled parts. Fur eyes are raised black spheres with expression scaling and no shaved coat behind them. Codex uses a dark screen with extruded terminal marks.

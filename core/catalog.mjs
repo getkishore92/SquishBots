@@ -2,7 +2,7 @@
 import { traits } from './vendor/blobatar/traits.ts';
 import { validateConfig, EXPRESSION_NAMES, MATERIAL_DEFAULTS, MATERIAL_PRESETS } from './resolve.mjs';
 
-const shapeRows = [['round',.11],['organic',.35],['boxy',.54],['capsule',.65],['nub',.745],['cloud',.825],['droplet',.888],['hexagon',.933],['ghost',.96],['monster',.978],['triangle',.995]];
+const shapeRows = [['round',.11],['organic',.35],['boxy',.54],['capsule',.65],['nub',.745],['cloud',.825],['droplet',.888],['hexagon',.933],['ghost',.96],['monster',.978],['triangle',.995],['claude',.997],['codex',.999]];
 const toneRows = [['pastel',.1],['pale',.28],['mid',.49],['deep',.71],['bright',.865],['ink',.965]];
 const choice = ([id,value]) => ({id,label:id,value,name:id,at:value});
 const control = (key,label,group,kind='slider',when,bands) => ({key,label,group,kind,...(when?{when}:{}),...(bands?{bands}:{})});

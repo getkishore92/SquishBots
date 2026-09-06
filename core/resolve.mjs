@@ -14,7 +14,7 @@ export const MATERIAL_DEFAULTS = {
 };
 export const MATERIAL_PRESETS = Object.keys(MATERIAL_DEFAULTS);
 export const EXPRESSION_NAMES = ['idle','happy','sad','mad','surprised','wink','sleepy','smug','unsure','scared','love','shy','sick','thinking'];
-export const SHAPES = {round:.11,organic:.35,boxy:.54,capsule:.65,nub:.745,cloud:.825,droplet:.888,hexagon:.933,ghost:.96,monster:.978,triangle:.995};
+export const SHAPES = {round:.11,organic:.35,boxy:.54,capsule:.65,nub:.745,cloud:.825,droplet:.888,hexagon:.933,ghost:.96,monster:.978,triangle:.995,claude:.997,codex:.999};
 const object = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const finite = v => typeof v === 'number' && Number.isFinite(v);
 function assert(ok, message) {if(!ok) throw new TypeError(message)}
@@ -83,8 +83,10 @@ function renderOptions(config) {
   const contrast=hex=>{const eye=luminance(hex);return (Math.max(head,eye)+.05)/(Math.min(head,eye)+.05)};
   palette={...palette,eye:contrast(softWhite)>contrast(dark)?softWhite:dark};
  }
+ if(!options.palette?.eye&&_layout(config.seed,{...options,expression:expressions.idle}).shape==='codex')palette={...palette,eye:'#a7f4ff'};
  return {...options,...(palette?{palette}:{}),expression:options.expression==='happy'?happyExpression:expressions[options.expression??'idle']};
 }
+function screenPath(b){const x=b.cx-b.rx*.77,y=b.cy-b.ry*.57,w=b.rx*1.54,h=b.ry*.84,r=b.rx*.14;return `M ${x+r} ${y} L ${x+w-r} ${y} Q ${x+w} ${y} ${x+w} ${y+r} L ${x+w} ${y+h-r} Q ${x+w} ${y+h} ${x+w-r} ${y+h} L ${x+r} ${y+h} Q ${x} ${y+h} ${x} ${y+h-r} L ${x} ${y+r} Q ${x} ${y} ${x+r} ${y} Z`}
 export function resolveConfig(input) {
  const config=validateConfig(input), opts=renderOptions(config);
  const layout=_layout(config.seed,opts), {marks,transform,bg}=_marks(config.seed,opts);
@@ -96,10 +98,11 @@ export function resolveConfig(input) {
   configHash:createHash('sha256').update(canonical({source:SOURCE,config})).digest('hex'),
   shape:layout.shape, marks, transform, bg, layout, motion,
   brows:['happy','wink'].includes(config.options.expression)?expressionBrows(layout,config.options.expression):[],
+  facePlate:layout.shape==='codex'?{kind:'path',fill:'#102137',d:screenPath(layout.body)}:null,
   bodyPaths:body.filter(m=>m.kind==='path').map(m=>m.d),
   bodyCircles:body.filter(m=>m.kind==='circle'), eyes,
   colors:{head:layout.palette.head,eye:layout.palette.eye,bg:layout.palette.bg},
-  status:config.status??'none',badge:config.badge??0,material:config.material,render:{...config.render,depth:config.render.depth??.95*Math.min(layout.body.rx,layout.body.ry)/32}};
+  status:config.status??'none',badge:config.badge??0,material:config.material,render:{...config.render,depth:config.render.depth??(['claude','codex'].includes(layout.shape)?.20:.95*Math.min(layout.body.rx,layout.body.ry)/32)}};
 }
 export function referenceSvg(config){const c=validateConfig(config);return blobatar(c.seed,renderOptions(c))}
 if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href){
