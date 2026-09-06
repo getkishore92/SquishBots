@@ -1,3 +1,5 @@
+![SquishBots — a playful 3D avatar studio](docs/images/squishbots-cover.png)
+
 # SquishBots
 
 An interactive 3D avatar studio built on [Blobatar by Alain](https://github.com/Alain00/blobatar), with interaction inspiration from [Bloub by Jérémy Perret](https://github.com/jeremy-prt/bloub).
