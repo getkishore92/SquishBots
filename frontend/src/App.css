@@ -62,4 +62,5 @@ button:not(:disabled),a,[role="tab"],[role="switch"],[role="checkbox"],[data-slo
 .accordion-controls{min-width:0;max-width:100%}.accordion-controls [data-slot=slider]{width:100%;min-width:0}.accordion-controls [data-slot=slider],.accordion-controls [data-slot=slider-track],.accordion-controls [data-slot=slider-thumb]{cursor:pointer}
 
 @media(max-width:900px){.studio-footer{flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center}.studio-footer .source-credits{white-space:nowrap}.studio-footer .credit-label{display:none}.studio-footer .remix-credit{margin:0}.studio-footer a{display:inline-block}.studio-footer .source-credits>span{margin:0 6px}}
-@media(max-width:400px){.studio-header{padding-inline:12px}.studio-header .header-actions{gap:2px}.github-star{padding-inline:7px}.github-star>svg:last-child{display:none}.studio-header .header-actions>button{width:40px}.studio-header>button>span:last-child{font-size:16px}}
+
+.footer-meta{display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;margin-left:auto}@media(max-width:900px){.studio-footer .footer-meta{margin:0}.studio-footer .footer-meta>span{margin:0}}

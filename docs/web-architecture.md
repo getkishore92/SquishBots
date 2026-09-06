@@ -59,11 +59,3 @@ The server binds to 127.0.0.1 and is intended for local use. A public multi-user
 ## Checks
 
 `npm test` checks source geometry, sparse traits, narrowing, expressions, motion math, hashing, material bounds and eye contrast. `npm run typecheck` and `npm run build` check the frontend. `npm run test:api` performs API checks and a real Blender render. Browser interaction and visual review remain separate from these code checks.
-
-## Avatar audio prototype
-
-`use-avatar-audio.js` plays bundled shape/expression WAV clips after user actions.
-The initial clip covers Capsule / Happy. Missing combinations remain silent.
-The header mute control persists in local storage and stops current playback.
-New sounds replace earlier sounds; hidden tabs stop playback. Blink animations
-and page loading are silent. Audio is not mixed into animation exports.

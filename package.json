@@ -16,7 +16,8 @@
     "build": "vite build",
     "dev:ui": "vite",
     "typecheck": "tsc --noEmit",
-    "setup:fonts": "node tools/setup-fonts.mjs"
+    "setup:fonts": "node tools/setup-fonts.mjs",
+    "version:patch": "npm version patch --no-git-tag-version"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
@@ -42,5 +43,6 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.2.2"
-  }
+  },
+  "version": "0.1.0"
 }
